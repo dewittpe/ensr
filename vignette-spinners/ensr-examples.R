@@ -1,0 +1,47 @@
+#'---
+#'title: "Elastic Net Searcher Examples"
+#'author: "Peter DeWitt"
+#'date: "`r Sys.Date()`"
+#'output: rmarkdown::html_vignette
+#'vignette: >
+#'  %\VignetteEngine{knitr::rmarkdown}
+#'  %\VignetteIndexEntry{ensr-examples}
+#'  %\VignetteEncoding{UTF-8}
+#'---
+
+#+ label=setup, include = FALSE
+library(knitr)
+knitr::opts_chunk$set(collapse = TRUE)
+options(qwraps2_markup = "markdown")
+
+#'
+# /*
+# =============================================================================
+# */
+#'
+#' # Section 1
+#' 
+#' Text goes here
+#+ label = "r-chunk-1"
+2 + 2
+
+#'
+# /*
+# =============================================================================
+# */
+#'
+#' # Section 2
+#'
+
+#'
+# /*
+# =============================================================================
+# */
+#'
+#' # Session Info
+#'
+print(sessionInfo(), local = FALSE)
+
+# /*
+# =============================================================================
+# */ 

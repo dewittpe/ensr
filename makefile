@@ -9,7 +9,7 @@ SRC       = $(wildcard $(PKG_ROOT)/src/*.cpp)
 RFILES    = $(wildcard $(PKG_ROOT)/R/*.R)
 EXAMPLES  = $(wildcard $(PKG_ROOT)/examples/*.R)
 TESTS     = $(wildcard $(PKG_ROOT)/tests/testthat/*.R)
-VIGNETTES = $(wildcard $(PKG_ROOT)/vignettes/*.R)
+VIGNETTES = $(wildcard $(PKG_ROOT)/vignette-spinners/*.R)
 RAWDATAR  = $(wildcard $(PKG_ROOT)/data-raw/*.R)
 
 .PHONY: all check install clean
@@ -23,7 +23,7 @@ all: $(PKG_NAME)_$(PKG_VERSION).tar.gz
 		-e "devtools::install_dev_deps()" \
 		-e "devtools::document('$(PKG_ROOT)')" \
 		-e "invisible(file.create('$(PKG_ROOT)/.document.Rout', showWarnings = FALSE))"
-	if [ -e "$(PKG_ROOT)/vignettes/makefile" ]; then $(MAKE) -C $(PKG_ROOT)/vignettes/; else echo "Nothing to do"; fi
+	if [ -e "$(PKG_ROOT)/vignette-spinners/makefile" ]; then $(MAKE) -C $(PKG_ROOT)/vignette-spinners/; else echo "Nothing to do"; fi
 
 $(PKG_NAME)_$(PKG_VERSION).tar.gz: .document.Rout $(TESTS) $(PKG_ROOT)/DESCRIPTION
 	R CMD build --no-resave-data --md5 $(build-options) $(PKG_ROOT)
