@@ -19,6 +19,7 @@ LazyData: true
 Imports:
     glmnet,
 Suggests:
+    data.table,
     knitr
 RoxygenNote: 6.1.0
 VignetteBuilder: knitr

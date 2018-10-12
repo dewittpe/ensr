@@ -1,8 +1,10 @@
 ---
-title: "Elastic Net Searcher Examples"
+title: "Elastic Net SearcheR Examples"
+subtitle: "ensr package version `r packageVersion('ensr')`"
 author: "Peter DeWitt"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
+bibliography: references.bib
 vignette: >
  %\VignetteEngine{knitr::rmarkdown}
  %\VignetteIndexEntry{ensr-examples}
@@ -17,18 +19,119 @@ options(qwraps2_markup = "markdown")
 
 
 
-# Section 1
+The primary purpose of the ensr package is to provide methods for searching
+for preferable values of $\lambda$ and $\alpha$ in elastice net regression.
+This This vignette starts with a
+summary of elastic net regression and the use/limitations of the
+[glmnet](https://cran.r-studio.com/package=glmnet) pacakge.  Examples of data
+set preperation follow and the vignette concludes with elastic net regression
+results.
 
-Text goes here
+A note about the format of the code in this vignette.  The namespace for ensr
+will be loaded and attached.  All other namespaces will be used explicity.
 
-```{r label = "r-chunk-1"}
-2 + 2
+```{r label="load_and_attach_ensr"}
+library(ensr)
 ```
 
 
+# Elastic Net Regression
 
-# Section 2
+Elastic Net Regression [@friedman2010regularization] is a penalized linear
+modeling approach that is a mixture of ridge regression [@hoerl1970ridge],
+and lasso regression [@tibshirani1996regression].  Ridge regression
+reducing the impact of co-linearity, and lasso
+reduces the dimensionality of the support by shrinking some of the regression
+coefficients to zero.  Elastic net does both of these by solving the
+following equation for gaussian responses:
+$$\min_{\beta_0, \beta \in \mathbb{R}^{p+1}} \frac{1}{2N} \sum_{i = 1}^{N}
+\left( y_i - \beta_0 - x_i^T \beta \right)^2 + \lambda \left[ \left(1 -
+\alpha \right) \frac{\left \lVert \beta \right \rVert_{2}^{2}}{2} + \alpha
+\left \lVert \beta \right \rVert_{1} \right],$$
+where $\lambda \geq 0$ is the complexity parameter and $0 \leq \alpha \leq 1$
+is the compromise between ridge $\left(\alpha = 0\right)$ and lasso $\left(
+\alpha = 1 \right).$
 
+One advantage for $0 < \alpha < 1,$ compared to lasso is that elastic net
+will consistently return the same set of non-zero coefficients when some of
+the predictors are highly correlated.  Lasso, $\alpha = 1,$ has the draw back
+of returning differing sets of non-zero coefficients when highly correlated
+predictors are in the model.
+
+A benefit of elastic net regression is that the $\beta$ vector can easily be
+programmed into any other software package capable of matrix, or even simple,
+arithmetic.  So, while a GBM model might be a better fit of the data than the
+linear model found via elastic net, GBM models are extremely difficult, or
+impossible to export to other tools.
+
+The `cv.glmnet` call from the glmnet package is used for fitting elastic
+nets.  The value of $\alpha$ must be defined.  To search for a preferable
+set of $\lambda$ and $\alpha$ values require fitting several models with
+different $\alpha$ values and then searching for a preferable model.
+Read the "Details" section in `help("cv.glmnet")`.
+
+
+# Data Sets
+
+## Water Percolation Through a Landfill
+The file `landfill.csv` contains results from a computer simulation of water
+percolation through five layers in a landfill over one year.
+
+```{r }
+landfill <-
+  data.table::fread(file = system.file("extdata/landfill.csv", package = "ensr"),
+                    sep = ",")
+```
+
+
+This landfill consists of five layers:
+
+1. Topsoil
+2. Geomembrane Liner
+3. Clay
+4. Weathered Lavery Till (WLT)
+5. Unweathered Lavery Till (ULT)
+
+The outcomes modeled by the computer program are:
+
+```{r label="regex_names", include = FALSE}
+regex_names <- function(pattern) {
+  paste(grep(pattern, names(landfill), value = TRUE), collapse = ", ")
+}
+```
+
+
+| Outcome       | Variable Name(s)           |
+| :--------     | :----------------          |
+| evaporation   | `r regex_names("^evap")`   |
+| runoff        | `r regex_names("^runoff")` |
+| percolation   | `r regex_names("^perc_")`  |
+| drainage      | `r regex_names("^drain_")` |
+| water content | `r regex_names("^wc_")`    |
+
+The set of predictors included in the data set are:
+
+| Predictor                          | Variable Name(s)                    | Notes                                                   |
+| :--------                          | :----------------                   | :----                                                   |
+| Porosity                           | `r regex_names("_porosity$")`       |                                                         |
+| van Genuchten $\alpha$             | `r regex_names("_alpha$")`          | related to the inverse of the air entry suction         |
+| van Genuchten $\theta_r$           | `r regex_names("_thetar$")`         | residual water content                                  |
+| van Genuchten N                    | `r regex_names("_n$")`              | pore size                                               |
+| Saturated hydraulic conductivity   | `r regex_names("_ks$")`             |                                                         |
+| Relative Humidity                  | `r regex_names("^rh$")`             |                                                         |
+| Leaf Area Index                    | `r regex_names("^lai$")`            |                                                         |
+| Grow Start                         | `r regex_names("growstart")`        | First day of the growing season                         |
+| Grow End                           | `r regex_names("growend")`          | Last day of the growing season                          |
+| Wind                               | `r regex_names("wind")`             | Average wind speed in mph                               |
+| Solar Radiation                    | `r regex_names("^rm\\w")`           | Mean of daily solar radiation for wet days, or dry days |
+| Amplitude of daily solar radiation | `r regex_names("^ar$")`             |                                                         |
+| SCS AMCII Curve Number             | `r regex_names("cn")`               |                                                         |
+| Plant root beta                    | `r regex_names("^beta$")`           | Used for calculating evaporation zone depth             |
+| Linear Defects                     | `r regex_names("^liner_defects$")`  | Number of defects per acre of liner                     |
+| Linear Pinholes                    | `r regex_names("^liner_pinholes$")` | Number of pinholes per acre of liner                    |
+| 100 year average Solar Radiation   | `r regex_names("weather_solrad")`   |                                                         |
+| 100 year average Precipitation     | `r regex_names("weather_precip")`   |                                                         |
+| 100 year average Temperature       | `r regex_names("weather_temp")`     |                                                         |
 
 
 # Session Info
@@ -37,4 +140,7 @@ Text goes here
 ```{r }
 print(sessionInfo(), local = FALSE)
 ```
+
+
+# References
 
