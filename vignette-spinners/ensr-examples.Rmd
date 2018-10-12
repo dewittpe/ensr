@@ -72,6 +72,8 @@ Read the "Details" section in `help("cv.glmnet")`.
 
 
 # Data Sets
+This section provides a description for the example data sets in the ensr
+package and steps needed to prepare the data for analysis.
 
 ## Water Percolation Through a Landfill
 The file `landfill.csv` contains results from a computer simulation of water
@@ -132,6 +134,33 @@ The set of predictors included in the data set are:
 | 100 year average Solar Radiation   | `r regex_names("weather_solrad")`   |                                                         |
 | 100 year average Precipitation     | `r regex_names("weather_precip")`   |                                                         |
 | 100 year average Temperature       | `r regex_names("weather_temp")`     |                                                         |
+
+## Landfill Data Preparation
+
+The elastic net method suggests that the predictors are centered and scaled
+and in the case of multi-variable responses, that the outcomes are centered
+and scaled as well.  For calls to `glmnet` and `cv.glmnet` the argument
+`standardized = TRUE` (default) to center and scale the values.  If you have
+already centered and scaled the data you may prefer to set `standardized =
+FALSE`.
+
+If you need, or want, to explicitly standardize your data you will likely
+find use of the base R function `scale` is sufficient for most cases.
+However, with the landfill data the simple centering and scaling could be
+considered improper.  `scale`, will use the mean and standard deviation of
+the input, that is fine if all the values in the input are unique
+observations.  In the landfill data, however, the manner by which the
+parameters where inputted into the computer program are repeated.  Centering
+and scaling should be based on the mean and standard deviation of unique
+values.  The ensr function `standardize` will standardize a numeric vector
+based on unique values, by default, via either mean/standard deviation, or
+median/IQR.
+
+```{r }
+nrow(landfill)
+sapply(landfill, function(x) length(unique(x)))
+```
+
 
 
 # Session Info
