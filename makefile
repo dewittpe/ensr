@@ -17,7 +17,7 @@ RAWDATAR  = $(wildcard $(PKG_ROOT)/data-raw/*.R)
 all: $(PKG_NAME)_$(PKG_VERSION).tar.gz
 
 .document.Rout: $(RFILES) $(SRC) $(EXAMPLES) $(RAWDATAR) $(VIGNETTES) $(PKG_ROOT)/DESCRIPTION
-	if [ -d "$(PKG_ROOT)/data-raw" ]; then $(MAKE) -C $(PKG_ROOT)/data-raw/; else echo "Nothing to do"; fi
+	if [ -e "$(PKG_ROOT)/data-raw/makefile" ]; then $(MAKE) -C $(PKG_ROOT)/data-raw/; else echo "Nothing to do"; fi
 	Rscript --vanilla --quiet -e "options(repo = c('$(CRAN)', '$(BIOC)'))" \
 		-e "options(warn = 2)" \
 		-e "devtools::install_dev_deps()" \
