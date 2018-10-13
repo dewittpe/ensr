@@ -3,7 +3,11 @@ title: "Elastic Net SearcheR Examples"
 subtitle: "ensr package version `r packageVersion('ensr')`"
 author: "Peter DeWitt"
 date: "`r Sys.Date()`"
-output: rmarkdown::html_vignette
+output:
+ rmarkdown::html_document:
+   toc: true
+   toc_float: true
+   number_sections: true
 bibliography: references.bib
 vignette: >
  %\VignetteEngine{knitr::rmarkdown}
@@ -28,10 +32,12 @@ set preperation follow and the vignette concludes with elastic net regression
 results.
 
 A note about the format of the code in this vignette.  The namespace for ensr
-will be loaded and attached.  All other namespaces will be used explicity.
+and data.table will be loaded and attached.   Other namespaces will be used
+explicitly.
 
 ```{r label="load_and_attach_ensr"}
 library(ensr)
+library(data.table)
 ```
 
 
@@ -156,11 +162,89 @@ values.  The ensr function `standardize` will standardize a numeric vector
 based on unique values, by default, via either mean/standard deviation, or
 median/IQR.
 
+Here is an example.  There are `r qwraps2::frmt(nrow(landfill))` rows in the
+landfill data set.  There are `r length(unique(landfill$topsoil_alpha))`
+unique values for the van Genuchten $\alpha$ value.  Here are the different
+scale and centerings:
+
 ```{r }
 nrow(landfill)
-sapply(landfill, function(x) length(unique(x)))
+length(unique(landfill$topsoil_alpha))
+
+# Standard scaling, using the mean and standard deviation for the full vector.
+scaled_topsoil_alpha_v1 <- as.vector(scale(landfill$topsoil_alpha))
+
+scaled_topsoil_alpha_v2 <-
+  (landfill$topsoil_alpha - mean(landfill$topsoil_alpha)) / sd(landfill$topsoil_alpha)
+
+all.equal(target  = scaled_topsoil_alpha_v1,
+          current = scaled_topsoil_alpha_v2,
+          check.attributes = FALSE)
+
+# Center and scale using the mean and standard deviation of only the unique
+# values of the vector.
+scaled_topsoil_alpha_v3 <-
+  as.vector(scale(landfill$topsoil_alpha,
+                  center = mean(unique(landfill$topsoil_alpha)),
+                  scale  = sd(unique(landfill$topsoil_alpha))))
+
+scaled_topsoil_alpha_v4 <- standardize(landfill$topsoil_alpha)
+
+all.equal(target  = scaled_topsoil_alpha_v3,
+          current = scaled_topsoil_alpha_v4,
+          check.attributes = FALSE)
+
+# Center and scale using the median and inner quartile range (IQR).
+scaled_topsoil_alpha_v5 <-
+  as.vector(scale(landfill$topsoil_alpha,
+                  center = median(unique(landfill$topsoil_alpha)),
+                  scale  = IQR(unique(landfill$topsoil_alpha))))
+
+scaled_topsoil_alpha_v6 <-
+  standardize(landfill$topsoil_alpha, 
+              stats = list(center = "median", scale = "IQR"))
+
+all.equal(target  = scaled_topsoil_alpha_v5,
+          current = scaled_topsoil_alpha_v6,
+          check.attributes = FALSE)
 ```
 
+
+For the full landfill data set we can center and scale all the columns as:
+
+```{r }
+scalled_landfill <- standardize(landfill)
+```
+
+
+Note that the values used for centering and scaling are retained as
+attributes for each variable in the data set.
+
+```{r }
+str( scalled_landfill[, 1:2] )
+```
+
+
+Incase you are interested, here are three ways to get the same result.  The
+simple `standardize(landfill)` call is the quickest.
+
+```{r }
+microbenchmark::microbenchmark(
+  e1 = { 
+    scalled_landfill <- landfill[, lapply(.SD, standardize)]
+  },
+  e2 = {
+    scalled_landfill <- data.table::as.data.table(lapply(landfill, standardize))
+  },
+  e3 = {
+    scalled_landfill <- standardize(landfill)
+  })
+```
+
+
+Now that we have scalled the data we can start to fit the elastic net.
+
+## Other Data
 
 
 # Session Info

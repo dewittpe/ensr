@@ -3,7 +3,11 @@
 #'subtitle: "ensr package version `r packageVersion('ensr')`"
 #'author: "Peter DeWitt"
 #'date: "`r Sys.Date()`"
-#'output: rmarkdown::html_vignette
+#'output:
+#'  rmarkdown::html_document:
+#'    toc: true
+#'    toc_float: true
+#'    number_sections: true
 #'bibliography: references.bib
 #'vignette: >
 #'  %\VignetteEngine{knitr::rmarkdown}
@@ -29,10 +33,13 @@ options(qwraps2_markup = "markdown")
 #' set preperation follow and the vignette concludes with elastic net regression
 #' results.
 #'
-#' A note about the format of the code in this vignette.  The namespace for ensr
-#' will be loaded and attached.  All other namespaces will be used explicity.
 #+label="load_and_attach_ensr"
 library(ensr)
+library(data.table)
+library(glmnet)
+library(microbenchmark)
+options(datatable.print.topn  = 3L,
+        datatable.print.nrows = 3L)
 
 #'
 #' # Elastic Net Regression
@@ -82,8 +89,7 @@ library(ensr)
 #' The file `landfill.csv` contains results from a computer simulation of water
 #' percolation through five layers in a landfill over one year.
 landfill <-
-  data.table::fread(file = system.file("extdata/landfill.csv", package = "ensr"),
-                    sep = ",")
+  fread(file = system.file("extdata/landfill.csv", package = "ensr"), sep = ",")
 
 #'
 #' This landfill consists of five layers:
@@ -153,8 +159,171 @@ regex_names <- function(pattern) {
 #' values.  The ensr function `standardize` will standardize a numeric vector
 #' based on unique values, by default, via either mean/standard deviation, or
 #' median/IQR.
+#'
+#' Here is an example.  There are `r qwraps2::frmt(nrow(landfill))` rows in the
+#' landfill data set.  There are `r length(unique(landfill$topsoil_alpha))`
+#' unique values for the van Genuchten $\alpha$ value.  Here are the different
+#' scale and centerings:
 nrow(landfill)
-sapply(landfill, function(x) length(unique(x)))
+length(unique(landfill$topsoil_alpha))
+
+# Standard scaling, using the mean and standard deviation for the full vector.
+scaled_topsoil_alpha_v1 <- as.vector(scale(landfill$topsoil_alpha))
+
+scaled_topsoil_alpha_v2 <-
+  (landfill$topsoil_alpha - mean(landfill$topsoil_alpha)) / sd(landfill$topsoil_alpha)
+
+all.equal(target  = scaled_topsoil_alpha_v1,
+          current = scaled_topsoil_alpha_v2,
+          check.attributes = FALSE)
+
+# Center and scale using the mean and standard deviation of only the unique
+# values of the vector.
+scaled_topsoil_alpha_v3 <-
+  as.vector(scale(landfill$topsoil_alpha,
+                  center = mean(unique(landfill$topsoil_alpha)),
+                  scale  = sd(unique(landfill$topsoil_alpha))))
+
+scaled_topsoil_alpha_v4 <- standardize(landfill$topsoil_alpha)
+
+all.equal(target  = scaled_topsoil_alpha_v3,
+          current = scaled_topsoil_alpha_v4,
+          check.attributes = FALSE)
+
+# Center and scale using the median and inner quartile range (IQR).
+scaled_topsoil_alpha_v5 <-
+  as.vector(scale(landfill$topsoil_alpha,
+                  center = median(unique(landfill$topsoil_alpha)),
+                  scale  = IQR(unique(landfill$topsoil_alpha))))
+
+scaled_topsoil_alpha_v6 <-
+  standardize(landfill$topsoil_alpha,
+              stats = list(center = "median", scale = "IQR"))
+
+all.equal(target  = scaled_topsoil_alpha_v5,
+          current = scaled_topsoil_alpha_v6,
+          check.attributes = FALSE)
+
+#'
+#' For the full landfill data set we can center and scale all the columns as:
+scalled_landfill <- standardize(landfill)
+
+#'
+#' Note that the values used for centering and scaling are retained as
+#' attributes for each variable in the data set.
+str( scalled_landfill[, 1:2] )
+
+#'
+#' Incase you are interested, here are three ways to get the same result.  The
+#' simple `standardize(landfill)` call is the quickest.
+microbenchmark(
+  e1 = {
+    scalled_landfill <- landfill[, lapply(.SD, standardize)]
+  },
+  e2 = {
+    scalled_landfill <- as.data.table(lapply(landfill, standardize))
+  },
+  e3 = {
+    scalled_landfill <- standardize(landfill)
+  })
+
+#'
+#' Now that we have scalled the data we can start to fit the elastic net.
+#'
+#' ## Other Data
+#'
+#' ## Other Data Preperation
+
+#'
+# /*
+# =============================================================================
+# */
+#'
+#' # Searching for $\lambda$ and $\alpha$
+#'
+#' The `cv.glmnet` uses k-fold cross-validation for glmnet to find a value for
+#' $\lambda.$  This requires specifying an $\alpha.$  Find a preferable set of
+#' $\alpha$ and $\lambda$ you will need to fit several `cv.glmnet`, one for each
+#' value of $\alpha$ that you want to consider.  To illustrate how to do this we
+#' will model evaporation as a function of the noted predictors in the landfill
+#' data set.
+#'
+#' Start by building the input matrices for the predictors, `x_matrix`, and the
+#' output `y_matrix`.
+y_matrix <- as.matrix(scalled_landfill$evap)
+x_matrix <- as.matrix(scalled_landfill[, topsoil_porosity:weather_temp])
+
+#'
+#' A set of $\alpha$ values which will be considered:
+alphas <- seq(0.05, 0.95, by = 0.05)
+
+#'
+#' Generate a list of `cv.glmnet` objects, one for each alpha.  A quick way to
+#' do this is build a list of arguments which will be coerced to a call and
+#' evaluated.
+cl <- list(quote(cv.glmnet),
+           family = "gaussian",
+           nfolds = 10L,
+           standardize = FALSE,
+           standardize.response = FALSE,
+           x = quote(x_matrix),
+           y = quote(y_matrix))
+
+fits <- lapply(alphas, function(a) { cl$alpha = a; eval(as.call(cl))})
+summary(fits)
+
+#'
+#' Selecting a preferable model from the elastic net fits is done as follows:
+#'
+#' 1. For each model ($\alpha$) find the "best" value of $\lambda.$  There are
+#' two options for this, `lambda.min`, the value of $\lambda$ that givens the
+#' minimum mean cross-validated error, and `lambda.1se`, the value gives the most
+#' regularized model such that the error is within one standard deviation of the
+#' minimum.
+lmins <- lapply(fits, `[[`, "lambda.min")
+l1ses <- lapply(fits, `[[`, "lambda.1se")
+
+lmin_idx <-
+  lapply(fits,
+         function(f) {
+           which(sapply(f$lambda, function(l) isTRUE(all.equal(target = f$lambda.min, l))))
+         })
+l1se_idx <-
+  lapply(fits,
+         function(f) {
+           which(sapply(f$lambda, function(l) isTRUE(all.equal(target = f$lambda.1se, l))))
+         })
+
+out1se <-
+  Map(function(model, index) {
+           list(cvm    = model$cvm[index],
+                lambda = model$lambda[index],
+                lambda_index = index,
+                alpha  = as.list(model$glmnet.fit$call)$alpha)
+           },
+           model = fits,
+           index = l1se_idx) %>%
+  lapply(., as.data.table) %>%
+  do.call(rbind, .) 
+
+out1se[cvm == min(cvm)]
+
+
+
+
+
+
+
+
+#'
+#' 2. Identify the index of the model with the $\lambda$ value equal to the
+#' value in `lambda_1se`.  Store in the object `lambda_index`.
+#'
+#' 3. Construct a data.frame with the cross-validation error, $\lambda,$ and
+#' $\alpha$ values.  Call this data.frame `cvm_alpha`.
+#'
+#' 4. Find the $\lambda$ and $\alpha$ values such that the cross validation is
+#' the smallest and the $\alpha$ value is the largest.
 
 #'
 # /*

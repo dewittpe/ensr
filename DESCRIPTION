@@ -20,6 +20,8 @@ Imports:
     glmnet,
 Suggests:
     data.table,
-    knitr
+    knitr,
+    microbenchmark,
+    qwraps2
 RoxygenNote: 6.1.0
 VignetteBuilder: knitr
