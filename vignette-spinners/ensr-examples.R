@@ -253,77 +253,53 @@ microbenchmark(
 y_matrix <- as.matrix(scalled_landfill$evap)
 x_matrix <- as.matrix(scalled_landfill[, topsoil_porosity:weather_temp])
 
-#'
-#' A set of $\alpha$ values which will be considered:
-alphas <- seq(0.05, 0.95, by = 0.05)
 
-#'
-#' Generate a list of `cv.glmnet` objects, one for each alpha.  A quick way to
-#' do this is build a list of arguments which will be coerced to a call and
-#' evaluated.
-cl <- list(quote(cv.glmnet),
-           family = "gaussian",
-           nfolds = 10L,
-           standardize = FALSE,
-           standardize.response = FALSE,
-           x = quote(x_matrix),
-           y = quote(y_matrix))
+ensr <- function(x, y, alphas = seq(0.05, 0.95, by = 0.05), nfolds = 10L, foldid, ...) {
+  
+  # build a single set of folds
+  if (missing(foldid)) {
+    foldid <- rep(seq(nfolds), length.out = nrow(x))
+  }
+  
+  cl <- as.list(match.call())
+  cl[[1]] <- quote(glmnet::cv.glmnet)
 
-fits <- lapply(alphas, function(a) { cl$alpha = a; eval(as.call(cl))})
-summary(fits)
+  models <- lapply(alphas,
+                   function(a) {
+                     cl$alpha = a
+                     eval(as.call(cl))
+                   })
+  # find the index for lambda.min and lambda.1se
+  lambda_idxs <-
+    lapply(models,
+           function(m) {
+             c(lmin = which(sapply(m$lambda, function(l) isTRUE(all.equal(target = m$lambda.min, l)))),
+               l1se = which(sapply(m$lambda, function(l) isTRUE(all.equal(target = m$lambda.1se, l)))))
+           }) 
 
-#'
-#' Selecting a preferable model from the elastic net fits is done as follows:
-#'
-#' 1. For each model ($\alpha$) find the "best" value of $\lambda.$  There are
-#' two options for this, `lambda.min`, the value of $\lambda$ that givens the
-#' minimum mean cross-validated error, and `lambda.1se`, the value gives the most
-#' regularized model such that the error is within one standard deviation of the
-#' minimum.
-lmins <- lapply(fits, `[[`, "lambda.min")
-l1ses <- lapply(fits, `[[`, "lambda.1se")
 
-lmin_idx <-
-  lapply(fits,
-         function(f) {
-           which(sapply(f$lambda, function(l) isTRUE(all.equal(target = f$lambda.min, l))))
-         })
-l1se_idx <-
-  lapply(fits,
-         function(f) {
-           which(sapply(f$lambda, function(l) isTRUE(all.equal(target = f$lambda.1se, l))))
-         })
-
-out1se <-
+  data.table::rbindlist(
   Map(function(model, index) {
-           list(cvm    = model$cvm[index],
-                lambda = model$lambda[index],
-                lambda_index = index,
+           data.table::data.table(
+                cvm.min    = model$cvm[index["lmin"]],
+                lambda.min = model$lambda[index["lmin"]],
+                nzero.min  = unname(model$nzero[index["lmin"]]),
+                cvm.1se    = model$cvm[index["l1se"]],
+                lambda.1se = model$lambda[index["l1se"]],
+                nzero.1se  = unname(model$nzero[index["l1se"]]),
                 alpha  = as.list(model$glmnet.fit$call)$alpha)
            },
-           model = fits,
-           index = l1se_idx) %>%
-  lapply(., as.data.table) %>%
-  do.call(rbind, .) 
+           model = models,
+           index = lambda_idxs)
+  )
 
-out1se[cvm == min(cvm)]
+}
 
+ensr(x_matrix, y_matrix)[, .SD[c(which.min(cvm.min), which.min(lambda.1se))]]
 
-
-
-
+# args(cv.glmnet)
 
 
-
-#'
-#' 2. Identify the index of the model with the $\lambda$ value equal to the
-#' value in `lambda_1se`.  Store in the object `lambda_index`.
-#'
-#' 3. Construct a data.frame with the cross-validation error, $\lambda,$ and
-#' $\alpha$ values.  Call this data.frame `cvm_alpha`.
-#'
-#' 4. Find the $\lambda$ and $\alpha$ values such that the cross validation is
-#' the smallest and the $\alpha$ value is the largest.
 
 #'
 # /*
