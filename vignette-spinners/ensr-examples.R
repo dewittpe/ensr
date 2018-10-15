@@ -38,8 +38,11 @@ library(ensr)
 library(data.table)
 library(glmnet)
 library(microbenchmark)
+library(ggplot2)
+library(magrittr)
 options(datatable.print.topn  = 3L,
         datatable.print.nrows = 3L)
+set.seed(42)
 
 #'
 #' # Elastic Net Regression
@@ -254,13 +257,113 @@ y_matrix <- as.matrix(scalled_landfill$evap)
 x_matrix <- as.matrix(scalled_landfill[, topsoil_porosity:weather_temp])
 
 #'
-#' A set of $\alpha$ values which will be considered:
+#' It is important to know that `cv.glmnet` can return different results for
+#' for the same call, see the following chunck.
+fits <- replicate(2,
+                  {
+                    cv.glmnet(x = x_matrix, y = y_matrix,
+                              alpha = 0.5,
+                              nfolds = 10L, # default
+                              standardize = FALSE, standardize.response = FALSE,
+                              family = "gaussian")
+                  },
+                  simplify = FALSE)
+
+all.equal(fits[[1]], fits[[2]])
+
+#'
+#' One way to avoid this is to use leave-one-out cross validation.
+fits <- replicate(2,
+                  {
+                    cv.glmnet(x = x_matrix, y = y_matrix,
+                              alpha = 0.5,
+                              nfolds = nrow(x_matrix),
+                              grouped = FALSE,
+                              standardize = FALSE, standardize.response = FALSE,
+                              family = "gaussian")
+                  },
+                  simplify = FALSE)
+
+all.equal(fits[[1]], fits[[2]])
+
+#'
+#' Leave-one-out cross-validation is just a special case of defining your own
+#' folds
+fits <- replicate(2,
+                  {
+                    cv.glmnet(x = x_matrix, y = y_matrix,
+                              alpha = 0.5,
+                              foldid = rep(seq(10), length.out = nrow(x_matrix)),
+                              standardize = FALSE, standardize.response = FALSE,
+                              family = "gaussian")
+                  },
+                  simplify = FALSE)
+
+all.equal(fits[[1]], fits[[2]])
+
+#'
+#' The reason for the differences between the two objects is due to the way that
+#' `cv.glmnet` builds the folds when only `nfolds` is provided.  Within the code
+#' for `cv.glmnet` (at least as of package version `r packageVersion("glmnet")`
+#' is the line `foldid = sample(rep(seq(nfolds), length = N))`.  The `sample`
+#' call is the issue.
+#'
+#' This note is important in the ensr work.  To make a fair comparison between
+#' two two different $\alpha$ levels the same folds need to be used in the
+#' cross-validation for $\lambda.$
+
+nfolds <- 10
+foldid <- rep(seq(nfolds), length.out = nrow(x_matrix))
+alphas <- seq(0.05, 0.95, by = 0.10)
+
+folds <- lapply(seq(nfolds), function(idx) list(train = which(foldid != idx), val = which(foldid == idx)))
+
+
+Map(f = function(fold, alpha) {
+      fit <- glmnet(x = x_matrix[fold$train, ],
+                    y = y_matrix[fold$train, ],
+                    alpha = alpha,
+                    standardize.response = FALSE,
+                    standardize = FALSE,
+                    family = "gaussian")
+      pmatrix <- predict(fit, newx = x_matrix[fold$val, ], s = fit$lambda)   # rows: obs, cols = lambda
+      cve <- apply(pmatrix, 2, function(x) ((x - y_matrix[fold$val, ])^2)) 
+      out <- cbind(matrix(c(cve, fit$lambda), ncol = 2), alpha)
+      colnames(out) <- c("cve", "lambda", "alpha")
+      out
+                  },
+      fold = rep(folds, each = length(alphas)),
+      alpha = rep(alphas, times = length(folds)))
+
+%>%
+do.call(rbind, .) %>%
+as.data.table(.) %>%
+.[, .SD[alpha == 0.05]] %>% print.default
+
+
+ggplot(.) +
+aes(x = alpha, y = log10(lambda), z = cve, color = cve) +
+geom_point()
+
+
+
+cv.glmnet(x = x_matrix, y = y_matrix, foldid = foldid, alpha = 0.95, standardize = FALSE, standardize.response = F)$cvm
+
+
+
+
+
+
+
+#'
+#' We will want to consider additional cross-validation for $\alpha$ as well.
+#' Consider the following, we will use a grid of $\alpha$ values:
 alphas <- seq(0.05, 0.95, by = 0.05)
 
 #'
 #' Generate a list of `cv.glmnet` objects, one for each alpha.  A quick way to
 #' do this is build a list of arguments which will be coerced to a call and
-#' evaluated.
+#' evaluated.  We'll run `cv.glmnet` 10 times for each alpha value.
 cl <- list(quote(cv.glmnet),
            family = "gaussian",
            nfolds = 10L,
@@ -269,11 +372,88 @@ cl <- list(quote(cv.glmnet),
            x = quote(x_matrix),
            y = quote(y_matrix))
 
-fits <- lapply(alphas, function(a) { cl$alpha = a; eval(as.call(cl))})
-summary(fits)
+fits <- lapply(rep(alphas, 10), function(a) {
+                 cl$alpha = a;
+                 f <- eval(as.call(cl))
+                 f$alpha <- a
+                 f
+           })
 
 #'
-#' Selecting a preferable model from the elastic net fits is done as follows:
+#' Let's extract some of the critical summary statistics from each `cv.glmnet`
+#' object, the index of the model with the same $\lambda$ as `lambda.min` or
+#' `lambda.1se`, the cross-validation mean error, and the number of non-zero
+#' coefficients, `nzero`.
+#'
+lmin_idx <-
+  lapply(fits,
+         function(f) {
+           which(sapply(f$lambda, function(l) isTRUE(all.equal(target = f$lambda.min, current = l))))
+         })
+
+l1se_idx <-
+  lapply(fits,
+         function(f) {
+           which(sapply(f$lambda, function(l) isTRUE(all.equal(target = f$lambda.1se, current = l))))
+         })
+
+results <-
+  Map(f = function(fit, lmin, l1se) {
+           data.table(alpha = fit$alpha,
+                      lambda.min = fit$lambda.min,
+                      lambda.1se = fit$lambda.1se,
+                      cvm.min = fit$cvm[lmin],
+                      cvm.1se = fit$cvm[l1se],
+                      nzero.min = fit$nzero[lmin],
+                      nzero.1se = fit$nzero[l1se])
+           },
+           fit = fits,
+           lmin = lmin_idx, l1se = l1se_idx) %>%
+  do.call(rbind, .) %>%
+  .[, alpha_rep := rep(1:10, each = length(alphas))]
+
+#'
+#' A box plot of the cross-validation error associated with `lambda.min` is
+#' shown below.  It should be easy to see that different cross-validation fold
+#' ids can, and do, result in a different minimum cross-validation error and
+#' alpha selection.  Subsetting the `results` to show the `cvm.min` for each
+#' replication illustrates the concern; $\alpha$ values can very greatly
+#' depending on the cross-validation indexing.
+#+fig.width = 8, fig.height = 4
+ggplot(results) +
+aes(x = factor(alpha), y = cvm.min) +
+geom_boxplot() +
+geom_point(mapping = aes(color = factor(alpha_rep))) +
+theme(legend.position = "bottom")
+
+results[, .SD[(which.min(cvm.min))], by = .(alpha_rep)] %>%
+  print %$%
+  table(alpha)
+
+#'
+#' To address is issue we have one of two choices, run `cv.glmnet` with the same
+#' fold ids for all alpha values and select an alpha from that grouping, or, set
+#' up double cross-validation, one for $\lambda$ and one for $\alpha.$
+
+results %>%
+  melt(., id.vars = c("alpha", "alpha_rep"), measure.vars = c("cvm.min", "cvm.1se")) %>% 
+  ggplot(.) +
+  aes(x = value, fill = variable) +
+  geom_density(alpha = 0.5)
+
+glmnet(x = x_matrix,
+       y = y_matrix,
+       family = "gaussian",
+       alpha = 0.5,
+       nlambda = 1L,
+       lambda = 0.02,
+       standardize = FALSE,
+       standardize.response = FALSE) %>% predict(., newx = x_matrix)
+
+
+      
+
+
 #'
 #' 1. For each model ($\alpha$) find the "best" value of $\lambda.$  There are
 #' two options for this, `lambda.min`, the value of $\lambda$ that givens the
@@ -283,16 +463,6 @@ summary(fits)
 lmins <- lapply(fits, `[[`, "lambda.min")
 l1ses <- lapply(fits, `[[`, "lambda.1se")
 
-lmin_idx <-
-  lapply(fits,
-         function(f) {
-           which(sapply(f$lambda, function(l) isTRUE(all.equal(target = f$lambda.min, l))))
-         })
-l1se_idx <-
-  lapply(fits,
-         function(f) {
-           which(sapply(f$lambda, function(l) isTRUE(all.equal(target = f$lambda.1se, l))))
-         })
 
 out1se <-
   Map(function(model, index) {
@@ -302,15 +472,11 @@ out1se <-
                 alpha  = as.list(model$glmnet.fit$call)$alpha)
            },
            model = fits,
-           index = l1se_idx) %>%
-  lapply(., as.data.table) %>%
-  do.call(rbind, .) 
+           index = l1se_idx)
+
+out1se <- do.call(rbind, lapply(out1se, as.data.table))
 
 out1se[cvm == min(cvm)]
-
-
-
-
 
 
 
