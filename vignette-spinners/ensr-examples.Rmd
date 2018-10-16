@@ -31,13 +31,14 @@ summary of elastic net regression and the use/limitations of the
 set preperation follow and the vignette concludes with elastic net regression
 results.
 
-A note about the format of the code in this vignette.  The namespace for ensr
-and data.table will be loaded and attached.   Other namespaces will be used
-explicitly.
 
 ```{r label="load_and_attach_ensr"}
-library(ensr)
+if (interactive()) {devtools::load_all() } else { library(ensr)}
 library(data.table)
+library(glmnet)
+library(microbenchmark)
+options(datatable.print.topn  = 3L,
+        datatable.print.nrows = 3L)
 ```
 
 
@@ -87,8 +88,7 @@ percolation through five layers in a landfill over one year.
 
 ```{r }
 landfill <-
-  data.table::fread(file = system.file("extdata/landfill.csv", package = "ensr"),
-                    sep = ",")
+  fread(file = system.file("extdata/landfill.csv", package = "ensr"), sep = ",")
 ```
 
 
@@ -201,7 +201,7 @@ scaled_topsoil_alpha_v5 <-
                   scale  = IQR(unique(landfill$topsoil_alpha))))
 
 scaled_topsoil_alpha_v6 <-
-  standardize(landfill$topsoil_alpha, 
+  standardize(landfill$topsoil_alpha,
               stats = list(center = "median", scale = "IQR"))
 
 all.equal(target  = scaled_topsoil_alpha_v5,
@@ -229,12 +229,12 @@ Incase you are interested, here are three ways to get the same result.  The
 simple `standardize(landfill)` call is the quickest.
 
 ```{r }
-microbenchmark::microbenchmark(
-  e1 = { 
+microbenchmark(
+  e1 = {
     scalled_landfill <- landfill[, lapply(.SD, standardize)]
   },
   e2 = {
-    scalled_landfill <- data.table::as.data.table(lapply(landfill, standardize))
+    scalled_landfill <- as.data.table(lapply(landfill, standardize))
   },
   e3 = {
     scalled_landfill <- standardize(landfill)
@@ -245,6 +245,35 @@ microbenchmark::microbenchmark(
 Now that we have scalled the data we can start to fit the elastic net.
 
 ## Other Data
+
+## Other Data Preperation
+
+
+# Searching for $\lambda$ and $\alpha$
+
+The `cv.glmnet` uses k-fold cross-validation for glmnet to find a value for
+$\lambda.$  This requires specifying an $\alpha.$  Find a preferable set of
+$\alpha$ and $\lambda$ you will need to fit several `cv.glmnet`, one for each
+value of $\alpha$ that you want to consider.  To illustrate how to do this we
+will model evaporation as a function of the noted predictors in the landfill
+data set.
+
+Start by building the input matrices for the predictors, `x_matrix`, and the
+output `y_matrix`.
+
+```{r }
+y_matrix <- as.matrix(scalled_landfill$evap)
+x_matrix <- as.matrix(scalled_landfill[, topsoil_porosity:weather_temp])
+
+ensr_obj <- ensr(x_matrix, y_matrix)
+
+summary(object = ensr_obj) 
+summary(object = ensr_obj)[, .SD[c(which.min(cve.min), which.min(lambda.1se))]]
+
+coef(ensr_obj)
+coef(ensr_obj, s = "1se")
+```
+
 
 
 # Session Info

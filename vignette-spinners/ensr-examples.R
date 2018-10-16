@@ -34,7 +34,7 @@ options(qwraps2_markup = "markdown")
 #' results.
 #'
 #+label="load_and_attach_ensr"
-library(ensr)
+if (interactive()) {devtools::load_all() } else { library(ensr)}
 library(data.table)
 library(glmnet)
 library(microbenchmark)
@@ -253,53 +253,18 @@ microbenchmark(
 y_matrix <- as.matrix(scalled_landfill$evap)
 x_matrix <- as.matrix(scalled_landfill[, topsoil_porosity:weather_temp])
 
+ensr_obj <- ensr(x_matrix, y_matrix)
 
-ensr <- function(x, y, alphas = seq(0.05, 0.95, by = 0.05), nfolds = 10L, foldid, ...) {
-  
-  # build a single set of folds
-  if (missing(foldid)) {
-    foldid <- rep(seq(nfolds), length.out = nrow(x))
-  }
-  
-  cl <- as.list(match.call())
-  cl[[1]] <- quote(glmnet::cv.glmnet)
+summary(object = ensr_obj) 
+summary(object = ensr_obj)[, .SD[c(which.min(cve.min), which.min(lambda.1se))]]
 
-  models <- lapply(alphas,
-                   function(a) {
-                     cl$alpha = a
-                     eval(as.call(cl))
-                   })
-  # find the index for lambda.min and lambda.1se
-  lambda_idxs <-
-    lapply(models,
-           function(m) {
-             c(lmin = which(sapply(m$lambda, function(l) isTRUE(all.equal(target = m$lambda.min, l)))),
-               l1se = which(sapply(m$lambda, function(l) isTRUE(all.equal(target = m$lambda.1se, l)))))
-           }) 
+coef(ensr_obj)
+coef(ensr_obj, s = "1se")
 
 
-  data.table::rbindlist(
-  Map(function(model, index) {
-           data.table::data.table(
-                cvm.min    = model$cvm[index["lmin"]],
-                lambda.min = model$lambda[index["lmin"]],
-                nzero.min  = unname(model$nzero[index["lmin"]]),
-                cvm.1se    = model$cvm[index["l1se"]],
-                lambda.1se = model$lambda[index["l1se"]],
-                nzero.1se  = unname(model$nzero[index["l1se"]]),
-                alpha  = as.list(model$glmnet.fit$call)$alpha)
-           },
-           model = models,
-           index = lambda_idxs)
-  )
-
-}
-
-ensr(x_matrix, y_matrix)[, .SD[c(which.min(cvm.min), which.min(lambda.1se))]]
-
-# args(cv.glmnet)
 
 
+     
 
 #'
 # /*
