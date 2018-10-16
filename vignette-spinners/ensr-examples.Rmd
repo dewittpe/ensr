@@ -33,7 +33,6 @@ results.
 
 
 ```{r label="load_and_attach_ensr"}
-#if (interactive()) {devtools::load_all() } else { library(ensr)}
 library(ensr)
 library(data.table)
 library(microbenchmark)
@@ -265,13 +264,24 @@ output `y_matrix`.
 y_matrix <- as.matrix(scalled_landfill$evap)
 x_matrix <- as.matrix(scalled_landfill[, topsoil_porosity:weather_temp])
 
-ensr_obj <- ensr(x_matrix, y_matrix)
+ensr_obj <- ensr(x_matrix, y_matrix, standardize = FALSE)
 
 summary(object = ensr_obj) 
 summary(object = ensr_obj)[, .SD[c(which.min(cve.min), which.min(lambda.1se))]]
 
 coef(ensr_obj)
-coef(ensr_obj, s = "1se")
+coef(ensr_obj, cve = "min")
+coef(ensr_obj, cve = "1se")
+
+coef(preferable(ensr_obj))
+
+preferable(ensr_obj, s = "min")
+preferable(ensr_obj, s = "1se")
+
+predict(ensr_obj, newx = x_matrix[1:2, ], cve = "min")
+predict(ensr_obj, newx = x_matrix[1:2, ], cve = "1se")
+predict(ensr_obj, newx = x_matrix[1:2, ], cve = "no")
+predict(ensr_obj, newx = x_matrix[1:2, ], cve = NULL)
 ```
 
 
