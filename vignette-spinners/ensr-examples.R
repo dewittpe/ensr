@@ -34,9 +34,9 @@ options(qwraps2_markup = "markdown")
 #' results.
 #'
 #+label="load_and_attach_ensr"
-if (interactive()) {devtools::load_all() } else { library(ensr)}
+#if (interactive()) {devtools::load_all() } else { library(ensr)}
+library(ensr)
 library(data.table)
-library(glmnet)
 library(microbenchmark)
 options(datatable.print.topn  = 3L,
         datatable.print.nrows = 3L)

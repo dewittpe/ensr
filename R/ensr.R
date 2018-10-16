@@ -2,7 +2,7 @@
 #'
 #' Search for the values of alpha and lambda.
 #'
-#' @inheritParams glmnet::glmnet
+#' @inheritParams glmnet::cv.glmnet
 #' @param alphas a sequence alpha values
 #'
 #' @export
@@ -54,6 +54,7 @@ summary.ensr <- function(object, ...) {
   )
 }
 
+#' @inheritParams glmnet::coef.cv.glmnet
 #' @export
 coef.ensr <- function(object, model_idx, s = "min", exact = FALSE, ...) {
   if (missing(model_idx) && is.character(s)) { 
@@ -62,8 +63,14 @@ coef.ensr <- function(object, model_idx, s = "min", exact = FALSE, ...) {
     model_idx <- sm$model_idx
     s <- sm[[paste0("lambda.", s)]]
   } 
-  coef(object[[model_idx]], s = s, exact = FALSE, ...)
+  stats::coef(object[[model_idx]], s = s, exact = FALSE, ...)
 }
 
-
+# Extract Model Coefficients
+#
+# @param model_idx the index of the ensr object referring to the cv.glmnet
+# object to extract coeffiencts from.  This another way of getting at the alpha
+# value.
+# @param s either a character string of "min" or "1se" to indicate using the
+# lambda value associated with the minimum cross-validation error or the 1se
 
