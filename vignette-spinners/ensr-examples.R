@@ -84,6 +84,28 @@ options(datatable.print.topn  = 3L,
 #' This section provides a description for the example data sets in the ensr
 #' package and steps needed to prepare the data for analysis.
 #'
+#' ## Traumatic Brain Injuries
+#' A synthetic data set based based on a Traumatic Brain Injury (TBI) study data
+#' set has been included with the ensr package.  All data points in this data
+#' set have been randomly generated and have no association with any real TBI
+#' patient.
+data("tbi", package = "ensr")
+str(tbi)
+
+#'
+#' The columns of this data set are:
+#'
+#' | Column(s)                 | Meaning                                                                                                 |
+#' | :------------------------ | :------------------------------------------------------------------------------------------------------ |
+#' | `age`                     | Age of the patient, in days, at time of hospital admission                                              |
+#' | `female`                  | An integer flag for sex, 1 == female, 0 == male.                                                        |
+#' | `pcode1`, ..., `pcode6`   | Indicator columns for the presence or absence of a procedure code sources from a trauma database.       |
+#' | `ncode1`, ..., `ncode6`   | Indicator columns for the presence or absence of the same procedure codes but from a billing data base. |
+#' | `injury1`, ..., `injury3` | Indicator columns for the presence or absence of three different types of TBI.                          |
+#'
+#' No special processing of this data is needed.  It can be used imediately in
+#' examples and testing of the ensr package.
+#'
 #' ## Water Percolation Through a Landfill
 #' The file `landfill.csv` contains results from a computer simulation of water
 #' percolation through five layers in a landfill over one year.
@@ -229,11 +251,6 @@ microbenchmark(
 #'
 #' Now that we have scalled the data we can start to fit the elastic net.
 #'
-#' ## Other Data
-#'
-#' ## Other Data Preperation
-
-#'
 # /*
 # =============================================================================
 # */
@@ -254,7 +271,7 @@ x_matrix <- as.matrix(scalled_landfill[, topsoil_porosity:weather_temp])
 
 ensr_obj <- ensr(x_matrix, y_matrix, standardize = FALSE)
 
-summary(object = ensr_obj) 
+summary(object = ensr_obj)
 summary(object = ensr_obj)[, .SD[c(which.min(cve.min), which.min(lambda.1se))]]
 
 coef(ensr_obj)
@@ -270,6 +287,43 @@ predict(ensr_obj, newx = x_matrix[1:2, ], cve = "min")
 predict(ensr_obj, newx = x_matrix[1:2, ], cve = "1se")
 predict(ensr_obj, newx = x_matrix[1:2, ], cve = "no")
 predict(ensr_obj, newx = x_matrix[1:2, ], cve = NULL)
+
+#'
+#' ## Cross-Validation Issues:
+#' This is something we need to look into. We will perform the search for a
+#' preferable model with two different foldid vectors, both set up for 10-fold
+#' cross validation.
+foldid1 <- sample(seq(10), size = nrow(x_matrix), replace = TRUE)
+foldid2 <- sample(seq(10), size = nrow(x_matrix), replace = TRUE)
+
+#'
+#' We will fit two ensr objects and report the smallest cve.min
+ensr_obj_1 <- ensr(x_matrix, y_matrix, standardize = FALSE, foldid = foldid1)
+ensr_obj_2 <- ensr(x_matrix, y_matrix, standardize = FALSE, foldid = foldid2)
+
+summary(ensr_obj_1)[, .SD[cve.min == min(cve.min)]]
+summary(ensr_obj_2)[, .SD[cve.min == min(cve.min)]]
+
+#'
+#' There are small differences in the cross validation errors and the in the
+#' $\lambda$ values.  There is a large difference, in the $\alpha$ values.  It
+#' is notable, that the differences in the regression coefficients is minor.
+#' In this case there are the same number of non-zero coefficients and the
+#' magnitudes are similar.
+cbind(coef(ensr_obj_1), coef(ensr_obj_2))
+
+#'
+#' Consider a different output, percolation through the topsoil.
+ensr_obj_1 <- ensr(x_matrix, as.matrix(scalled_landfill$perc_topsoil), standardize = FALSE, foldid = foldid1)
+ensr_obj_2 <- ensr(x_matrix, as.matrix(scalled_landfill$perc_topsoil), standardize = FALSE, foldid = foldid2)
+
+summary(ensr_obj_1)[, .SD[cve.min == min(cve.min)]]
+summary(ensr_obj_2)[, .SD[cve.min == min(cve.min)]]
+
+#'
+#' One could argue there is a major differnce in the result between the two
+#' foldid.  Using the cve.min, the foldid1 leads to 19 non-zero coefficients
+#' whereas foldid2 leads to 22 non-zero coefficients.
 
 #'
 # /*

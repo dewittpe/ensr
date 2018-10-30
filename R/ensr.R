@@ -128,9 +128,12 @@ preferable.ensr <- function(object, cve = "min", ...) {
     sm <- sm[sm[['alpha']] == max(sm[['alpha']])]
   }
   model_idx <- sm$model_idx
-  # s <- sm[[le]]
 
-  out <- object[[model_idx]]
+  out <- object[[model_idx]] 
   out$alpha <- sm$alpha
+  out$lambda.min_idx <- which(out$lambda == out$lambda.min)
+  out$lambda.1se_idx <- which(out$lambda == out$lambda.1se)
+  class(out) <- c("ensr_pref", class(out))
   out
 }
+
