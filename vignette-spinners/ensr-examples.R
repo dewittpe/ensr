@@ -324,6 +324,108 @@ summary(ensr_obj_2)[, .SD[cve.min == min(cve.min)]]
 #' One could argue there is a major differnce in the result between the two
 #' foldid.  Using the cve.min, the foldid1 leads to 19 non-zero coefficients
 #' whereas foldid2 leads to 22 non-zero coefficients.
+#'
+#' ## Need to set up a grid of lambda and alpha values to work with and use LOOCV
+fit0 <- glmnet(x = model.matrix( ~ . - injury1 - injury2 - injury3 - 1, data = tbi),
+               y = matrix(tbi$injury1, ncol = 1),
+               family = "binomial",
+               alpha = 0)
+fit1 <- update(fit0, alpha = 1)
+fit5 <- update(fit0, alpha = 0.5)
+fit0$lambda
+fit1$lambda
+fit5$lambda
+
+par(mfrow = c(3, 2))
+hist(fit0$lambda)
+hist(log10(fit0$lambda))
+hist(fit1$lambda)
+hist(log10(fit1$lambda))
+hist(fit5$lambda)
+hist(log10(fit5$lambda))
+
+my_lambda <- sort(c(fit0$lambda, fit1$lambda))
+
+str(fit0)
+
+# library(doMC)
+# registerDoMC(cores = 9L)
+
+cvfits <-
+  lapply(seq(0, 1, by = 0.1),
+         function(a) {
+           cv.glmnet(x = model.matrix( ~ . - injury1 - injury2 - injury3 - 1, data = tbi),
+                     y = matrix(tbi$injury1, ncol = 1),
+                     alpha = a,
+                     lambda = my_lambda,
+                     nfolds = nrow(tbi),
+                     grouped = FALSE,
+                     family = "binomial",
+                     parallel = TRUE)
+         })
+
+
+str(cvfits, max.level = 1L)
+str(cvfits[[1]], max.level = 1L)
+as.list(cvfits[[1]]$glmnet.fit$call)
+
+library(dplyr)
+
+results <-
+  lapply(cvfits, function(x) {
+           data.frame(lambda = x$lambda, cvm = x$cvm)
+         }) %>%
+  dplyr::bind_rows(.id = "alpha") %>%
+  dplyr::mutate(alpha = seq(0, 1, by = 0.1)[as.integer(alpha)])
+
+library(ggplot2)
+
+ggplot(results) +
+  aes(x = alpha, y = log10(lambda), color = cvm) +
+  geom_point() +
+  geom_point(data = {results %>% dplyr::group_by(alpha) %>% dplyr::filter(lambda == min(lambda))}, color = "red", size = 2)
+
+ggplot(results) +
+  theme_bw() +
+  aes(x = alpha, y = log10(lambda), z = log10(cvm))  +
+  geom_tile() +
+  stat_density_2d(mapping = aes(colour = log10(cvm)))
+  # scale_colour_gradient2()
+
+# thought: git the lambda ranges for
+
+
+alphas <- seq(0, 1, by = 0.1)
+cl <- as.list(fit0$call)
+
+glmnets <- lapply(alphas, function(a) {cl$alpha <- a; eval(as.call(cl))})
+
+lambdas <- lapply(glmnets, `[[`, 'lambda')
+
+goo <- function(x) {
+  unlist(
+  list(
+  rep(x[1], times = 2)
+  ,
+  rep(x[-c(1, length(x))], each = 3)
+  ,
+  rep(x[length(x)], times = 2)
+  ) )
+}
+goo(lambdas)
+
+
+foo <- function(x) {
+  firsts <- x[-length(x)]
+  seconds <- x[-1] 
+  out <- c(2/3 *firsts + 1/3 * seconds, 1/3 * firsts + 2/3 * seconds, x)
+  out <- sort(out)
+  out
+}
+foo(alphas)
+
+rep(foo(alphas), each = 2)
+
 
 #'
 # /*
