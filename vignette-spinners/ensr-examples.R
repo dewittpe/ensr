@@ -272,7 +272,7 @@ x_matrix <- as.matrix(scalled_landfill[, topsoil_porosity:weather_temp])
 ensr_obj <- ensr(x_matrix, y_matrix, standardize = FALSE)
 
 summary(object = ensr_obj)
-summary(object = ensr_obj)[, .SD[c(which.min(cve.min), which.min(lambda.1se))]]
+summary(object = ensr_obj)[c(which.min(cve.min), which.min(lambda.1se))]
 
 coef(ensr_obj)
 coef(ensr_obj, cve = "min")
@@ -290,6 +290,7 @@ predict(ensr_obj, newx = x_matrix[1:2, ], cve = NULL)
 
 #'
 #' ## Cross-Validation Issues:
+#'
 #' This is something we need to look into. We will perform the search for a
 #' preferable model with two different foldid vectors, both set up for 10-fold
 #' cross validation.
@@ -348,8 +349,10 @@ my_lambda <- sort(c(fit0$lambda, fit1$lambda))
 
 str(fit0)
 
-# library(doMC)
-# registerDoMC(cores = 9L)
+if (interactive()) {
+  library(doMC)
+  registerDoMC(cores = 9L)
+}
 
 cvfits <-
   lapply(seq(0, 1, by = 0.1),
@@ -373,12 +376,13 @@ library(dplyr)
 
 results <-
   lapply(cvfits, function(x) {
-           data.frame(lambda = x$lambda, cvm = x$cvm)
+           data.frame(lambda = x$lambda, cvm = x$cvm, nzero = x$nzero)
          }) %>%
   dplyr::bind_rows(.id = "alpha") %>%
   dplyr::mutate(alpha = seq(0, 1, by = 0.1)[as.integer(alpha)])
 
 library(ggplot2)
+library(ggforce)
 
 ggplot(results) +
   aes(x = alpha, y = log10(lambda), color = cvm) +
@@ -387,10 +391,17 @@ ggplot(results) +
 
 ggplot(results) +
   theme_bw() +
-  aes(x = alpha, y = log10(lambda), z = log10(cvm))  +
-  geom_tile() +
-  stat_density_2d(mapping = aes(colour = log10(cvm)))
-  # scale_colour_gradient2()
+  aes(x = alpha, y = log10(lambda), z = log10(cvm), color = log10(cvm))  +
+  # geom_tile() +
+  geom_point() +
+  geom_contour() +
+  # stat_density_2d(mapping = aes(colour = log10(cvm)))
+  scale_colour_gradient(low = "blue", high = "red")
+
+ggplot(results) +
+  aes(x = nzero, y = cvm, group = factor(alpha), color = factor(alpha)) + 
+  geom_point() + geom_line() +
+  facet_zoom(x = nzero > 10, y = cvm < 0.3)
 
 # thought: git the lambda ranges for
 
