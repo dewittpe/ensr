@@ -4,8 +4,7 @@
 \alias{lambda_max}
 \title{Lambda Max}
 \usage{
-lambda_max(y, x, standardize = TRUE, standardize.response = FALSE,
-  alpha = 0, ...)
+lambda_max(y, x, standardize = TRUE, alpha = 0, ...)
 }
 \arguments{
 \item{y}{the response vector}
@@ -20,7 +19,7 @@ lambda_max(y, x, standardize = TRUE, standardize.response = FALSE,
 }
 \description{
 Determine the lambda_max value that would be genteraged from a call to
-\code{\link[glmnet]{glment}} without making that call.
+\code{\link[glmnet]{glmnet}} without making that call.
 }
 \examples{
 
@@ -34,7 +33,7 @@ lambda_max(Yvec, Xmat, alpha = alphas)
 # Look at different options for standardizing the inputs.
 
 dat <-
-  expand.grid(standardize = c(TRUE, FALSE), 
+  expand.grid(standardize = c(TRUE, FALSE),
               alpha = alphas)
 
 lmax <-
@@ -44,7 +43,7 @@ lmax <-
       MoreArgs = list(y = Yvec, x = Xmat))
 
 
-gmax <- 
+gmax <-
   Map(glmnet::glmnet,
       standardize = dat$standardize,
       alpha = dat$alpha,
