@@ -329,6 +329,7 @@ summary(ensr_obj_2)[, .SD[cve.min == min(cve.min)]]
 
 ############################## EXPLORING ###########################
 
+#+ eval = FALSE
 # Make a lambda_max function
 lambda_max <- function(y, x, alpha) {
   # y <- scale(y)
@@ -389,8 +390,7 @@ max(abs(t(residuals(f) - predict(f, type = "terms"))) %*% X) / (alpha * n)
 
 
 ############################## EXPLORING ###########################
-#'
-#' ## Need to set up a grid of lambda and alpha values to work with and use LOOCV
+## Need to set up a grid of lambda and alpha values to work with and use LOOCV
 fit0 <- glmnet(x = model.matrix( ~ . - injury1 - injury2 - injury3 - 1, data = tbi),
                y = matrix(tbi$injury1, ncol = 1),
                family = "binomial",
