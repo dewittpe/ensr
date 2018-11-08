@@ -86,19 +86,27 @@ lambda_max <- function(y, x, standardize = TRUE, alpha = 0, ...) {
 #' Xmat <- model.matrix( ~ . - injury1 - injury2 - injury3 - 1, data = tbi)
 #' Yvec <- matrix(tbi$injury1, ncol = 1)
 #' alphas <- seq(0, 1, length = 20)
-#' test <- lambda_alpha_grid(alphas = alphas, lambdas = lambda_max(Yvec, Xmat, alpha = alphas))
+#'
+#' lga <- lambda_alpha_grid(alphas = alphas, lambdas = lambda_max(Yvec, Xmat, alpha = alphas))
 #'
 #' ggplot2::ggplot() +
 #'   ggplot2::theme_bw() +
 #'   ggplot2::aes_string(x = "a", y = "log10(l)") +
-#'   ggplot2::geom_path(data = test$top) +
-#'   ggplot2::geom_point(data = test$lgrid)
+#'   ggplot2::geom_path(data = lga$top) +
+#'   ggplot2::geom_point(data = lga$lgrid,
+#'                       mapping = ggplot2::aes(color = cos(a) + sin(log10(l)))) +
+#'   ggplot2::geom_contour(data = lga$lgrid,
+#'                         mapping = ggplot2::aes(z = cos(a) + sin(log10(l)))) +
+#'   ggplot2::scale_color_gradient2(low = "blue", high = "red", mid = "grey")
 #'
 #' @export
 lambda_alpha_grid <- function(lambdas, alphas) {
+
   all_alphas <- sort(c(alphas, alphas[-length(alphas)] + diff(alphas) / 2))
   all_lmaxs  <- rep(lambdas, each = 2)
+
   top <- data.table::data.table(l = all_lmaxs[-length(all_lmaxs)], a = all_alphas)
+
   lgrids <-
     Map(function(a, lmax, lmin) { data.table::data.table(a = a, l = 10^seq(log10(lmin), log10(lmax), length = 50)) },
         a = top$a,
@@ -108,7 +116,7 @@ lambda_alpha_grid <- function(lambdas, alphas) {
   alll <- unique(unlist(lapply(lgrids, `[[`, "l")))
 
   lgrid <-
-    Map(function(a, l) { data.table::data.table(a = a, l = alll[which(alll <= l)]) }, a = top$a, l = top$l)
+    Map(function(a, l) { data.table::data.table(a = a, l = alll[which(alll <= l & alll >= 0.001 * l)]) }, a = top$a, l = top$l)
   lgrid <- data.table::rbindlist(lgrid)
 
   list(top = top, lgrid = lgrid)
