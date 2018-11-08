@@ -326,16 +326,85 @@ summary(ensr_obj_2)[, .SD[cve.min == min(cve.min)]]
 #' foldid.  Using the cve.min, the foldid1 leads to 19 non-zero coefficients
 #' whereas foldid2 leads to 22 non-zero coefficients.
 #'
+
+############################## EXPLORING ###########################
+
+# Make a lambda_max function
+lambda_max <- function(y, x, alpha) {
+  # y <- scale(y)
+  # x <- apply(x, 2, scale)
+  N <- nrow(x) 
+  # if (isTRUE(all.equal(0, alpha))) alpha <- 0.001
+  # if (isTRUE(all.equal(1, alpha))) alpha <- 0.999 
+  # max(t(x) %*% (y - mean(y) * (1 - mean(y)))) / (alpha * N)
+  rbind(
+  max( abs( t( (y - mean(y) * (1 - mean(y))) )  %*% x) ) / (alpha * N) 
+  max( abs( t( (y ))   %*% x) ) / (alpha * N) 
+  )
+  # max( abs( t(y)  %*% x) ) / (alpha * N) 
+}
+
+lambda_max(y = matrix(tbi$injury1, ncol = 1),
+           x = model.matrix( ~ . - injury1 - injury2 - injury3 - 1, data = tbi),
+           alpha = c(0.001, .5, 1)) 
+
+YVEC <-  matrix(tbi$injury1, ncol = 1)
+XMAT <- model.matrix( ~ . - injury1 - injury2 - injury3 - 1, data = tbi)
+f <- lm(YVEC ~  XMAT)
+
+max(abs(t(XMAT) %*% (residuals(f) + predict(f, type = "terms")))) / (0.5 * nrow(XMAT))
+max(abs(t(apply(XMAT, 2, scale)) %*% (residuals(f) + predict(f, type = "terms")))) / (0.5 * nrow(XMAT))
+g <- glmnet(y = YVEC, x = XMAT, standardize = FALSE, alpha = 0.5)
+max(g$lambda)
+max(update(g, standardize = TRUE)$lambda)
+
+coef(g)
+
+n <- 500
+p <- 3
+b <- c(-5,3,2,0)
+b <- c(3,2,0)
+
+X <- cbind(rep(1,n),scale(matrix(rnorm(p*n),nrow=n)))
+X <- cbind(scale(matrix(rnorm(p*n),nrow=n)))
+Y <- rbinom(n,1,prob = exp(X%*%b)/(1 + exp(X%*%b)))
+
+alpha <- .5
+
+max( abs(t(Y - mean(Y)*(1-mean(Y))) %*% X ) )/ ( alpha * n) # largest lambda value
+eg_fit <- glmnet(x=X,y=Y,family="poisson",alpha = alpha,standardize=FALSE)
+eg_fit$lambda[1] # largest lambda value
+lambda_max(Y, X, 0.5)
+
+coef(eg_fit)
+
+f <- lm(Y ~ X)
+
+max(abs(residuals(f) - predict(f, type = "terms"))) / (alpha * n)
+
+sum(X[1, ] *  coef(f)[-1] )
+predict(f, type = "terms")[1]
+
+max(abs(t(residuals(f) - predict(f, type = "terms"))) %*% X) / (alpha * n)
+
+
+############################## EXPLORING ###########################
+#'
 #' ## Need to set up a grid of lambda and alpha values to work with and use LOOCV
 fit0 <- glmnet(x = model.matrix( ~ . - injury1 - injury2 - injury3 - 1, data = tbi),
                y = matrix(tbi$injury1, ncol = 1),
                family = "binomial",
-               alpha = 0)
+               standardize = FALSE,
+               alpha = 0) 
 fit1 <- update(fit0, alpha = 1)
 fit5 <- update(fit0, alpha = 0.5)
-fit0$lambda
-fit1$lambda
-fit5$lambda
+max(fit0$lambda)
+max(fit1$lambda)
+max(fit5$lambda)
+
+coef(fit0)
+coef(fit1)
+coef(fit5)
 
 par(mfrow = c(3, 2))
 hist(fit0$lambda)
@@ -451,5 +520,5 @@ print(sessionInfo(), local = FALSE)
 #' # References
 #'
 # /*
-#                             --- End of File ---
+# ------------------------------- End of File ----------------------------------
 # */
