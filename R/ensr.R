@@ -6,53 +6,82 @@
 #' @param alphas a sequence alpha values
 #'
 #' @export
-ensr <- function(x, y, alphas = seq(0.05, 0.95, by = 0.05), nfolds = 10L, foldid, ...) {
+ensr <- function(y, x, alphas = seq(0.00, 1.00, length = 10), nfolds = 10L, foldid, ...) {
 
   # build a single set of folds
   if (missing(foldid)) {
     foldid <- rep(seq(nfolds), length.out = nrow(x))
   }
 
-  cl <- as.list(match.call())
-  cl[[1]] <- quote(glmnet::cv.glmnet)
+  #   glmnet_args <- formals(glmnet::glmnet)
+  #   names(glmnet_args) 
 
-  models <- lapply(alphas,
-                   function(a) {
-                     cl$alpha = a
+  cl <- as.list(match.call()) 
+  cl[[1]] <- quote(glmnet::cv.glmnet)
+  cl$alphas <- NULL
+
+  # for(a in setdiff(names(glmnet_args), names(cl))) {
+  #   cl[[a]] <- glmnet_args[[a]]
+  # }
+
+  lmax <- lambda_max(y, x, alphas, standardize = cl$standardize)
+  lgrid <- lambda_alpha_grid(lmax, alphas)
+
+  l_and_a <- split(lgrid$lgrid, lgrid$lgrid$a)
+
+  models <- lapply(l_and_a,
+                   function(la) {
+                     cl$alpha <- la$a[1]
+                     cl$lambda <- la$l
                      eval(as.call(cl))
                    })
+
+  names(models) <- NULL
+
   class(models) <- "ensr"
   models
 }
+x <- Xmat <- model.matrix( ~ . - injury1 - injury2 - injury3 - 1, data = tbi)
+y <- Yvec <- matrix(tbi$injury1, ncol = 1)
+
+out <- ensr(Yvec, Xmat, standardize = TRUE) 
+str(out, max.level = 1)
 
 
 #' @export
 summary.ensr <- function(object, ...) {
-  # find the index for lambda.min and lambda.1se
-  lambda_idxs <-
-    lapply(object,
-           function(m) {
-             c(lmin = which(sapply(m$lambda, function(l) isTRUE(all.equal(target = m$lambda.min, l)))),
-               l1se = which(sapply(m$lambda, function(l) isTRUE(all.equal(target = m$lambda.1se, l)))))
-           })
 
   data.table::rbindlist(
-                        Map(function(model, index) {
-                              data.table::data.table(lambda.min.idx = index["lmin"],
-                                                     lambda.1se.idx = index["l1se"],
-                                                     cve.min    = model$cvm[index["lmin"]],
-                                                     lambda.min = model$lambda[index["lmin"]],
-                                                     nzero.min  = unname(model$nzero[index["lmin"]]),
-                                                     cve.1se    = model$cvm[index["l1se"]],
-                                                     lambda.1se = model$lambda[index["l1se"]],
-                                                     nzero.1se  = unname(model$nzero[index["l1se"]]),
-                                                     alpha  = as.list(model$glmnet.fit$call)$alpha)
-                            },
-                            model = object,
-                            index = lambda_idxs),
-                        idcol = "model_idx"
+  lapply(object, function(obj) {
+           data.table::data.table(lambda = obj$lambda,
+                cvm    = obj$cvm,
+                # lambda.min = obj$lambda.min,
+                nzero = obj$nzero,
+                alpha = as.list(obj$glmnet.fit$call)$alpha)
+                   })
   )
+
 }
+summary(out) 
+
+sout <- summary(out)
+sout[, z := standardize(cvm, stats = list(center = "median", scale = "IQR"))]
+sout[, z := standardize(cvm, stats = list(center = "mean", scale = "sd"))]
+sout[, z := standardize(cvm, stats = list(center = "min", scale = "sd"))]
+
+library(ggplot2)
+ggplot(sout) +
+  aes(x = alpha, y = lambda, z = log(z), color = log(z)) + 
+  # aes(x = alpha, y = lambda, z = nzero, color = factor(nzero)) + 
+  geom_point() +
+  geom_contour() +
+  scale_y_log10() +
+  # geom_text(mapping = aes(label = nzero, color = nzero)) +
+  geom_point(data = sout[cvm == min(cvm), ], color = "red") +
+  scale_color_gradient2()
+
+standardize(summary(out)$cvm, stats = list(center = "median", scale = "IQR")) 
+
 
 #' Predict Methods for ensr objects
 #'

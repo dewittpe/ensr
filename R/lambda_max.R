@@ -79,6 +79,8 @@ lambda_max <- function(y, x, standardize = TRUE, alpha = 0, ...) {
 #'
 #' @param lambdas a vector of max values for each alpha given
 #' @param alphas  a vector a alpha values corresponding to the max lambdas
+#' @param n number of lambdas to generate for each alpha before creating the
+#' grid
 #'
 #' @examples
 #'
@@ -100,7 +102,7 @@ lambda_max <- function(y, x, standardize = TRUE, alpha = 0, ...) {
 #'   ggplot2::scale_color_gradient2(low = "blue", high = "red", mid = "grey")
 #'
 #' @export
-lambda_alpha_grid <- function(lambdas, alphas) {
+lambda_alpha_grid <- function(lambdas, alphas, n = 10L) {
 
   all_alphas <- sort(c(alphas, alphas[-length(alphas)] + diff(alphas) / 2))
   all_lmaxs  <- rep(lambdas, each = 2)
@@ -108,7 +110,7 @@ lambda_alpha_grid <- function(lambdas, alphas) {
   top <- data.table::data.table(l = all_lmaxs[-length(all_lmaxs)], a = all_alphas)
 
   lgrids <-
-    Map(function(a, lmax, lmin) { data.table::data.table(a = a, l = 10^seq(log10(lmin), log10(lmax), length = 50)) },
+    Map(function(a, lmax, lmin) { data.table::data.table(a = a, l = 10^seq(log10(lmin), log10(lmax), length = n)) },
         a = top$a,
         lmax = top$l,
         MoreArgs = list(lmin = 0.001 * min(all_lmaxs)))
