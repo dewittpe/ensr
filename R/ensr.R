@@ -13,16 +13,9 @@ ensr <- function(y, x, alphas = seq(0.00, 1.00, length = 10), nfolds = 10L, fold
     foldid <- rep(seq(nfolds), length.out = nrow(x))
   }
 
-  #   glmnet_args <- formals(glmnet::glmnet)
-  #   names(glmnet_args) 
-
-  cl <- as.list(match.call()) 
+  cl <- as.list(match.call())
   cl[[1]] <- quote(glmnet::cv.glmnet)
   cl$alphas <- NULL
-
-  # for(a in setdiff(names(glmnet_args), names(cl))) {
-  #   cl[[a]] <- glmnet_args[[a]]
-  # }
 
   lmax <- lambda_max(y, x, alphas, standardize = cl$standardize)
   lgrid <- lambda_alpha_grid(lmax, alphas)
@@ -41,47 +34,46 @@ ensr <- function(y, x, alphas = seq(0.00, 1.00, length = 10), nfolds = 10L, fold
   class(models) <- "ensr"
   models
 }
-x <- Xmat <- model.matrix( ~ . - injury1 - injury2 - injury3 - 1, data = tbi)
-y <- Yvec <- matrix(tbi$injury1, ncol = 1)
-
-out <- ensr(Yvec, Xmat, standardize = TRUE) 
-str(out, max.level = 1)
-
 
 #' @export
-summary.ensr <- function(object, ...) {
-
-  data.table::rbindlist(
-  lapply(object, function(obj) {
-           data.table::data.table(lambda = obj$lambda,
-                cvm    = obj$cvm,
-                # lambda.min = obj$lambda.min,
-                nzero = obj$nzero,
-                alpha = as.list(obj$glmnet.fit$call)$alpha)
-                   })
-  )
-
+summary.ensr <- function(object, ...) { 
+  out <-
+    data.table::rbindlist(
+      lapply(seq_along(object),
+             function(idx) {
+               data.table::data.table(l_index = idx,
+                                      lambda = object[[idx]]$lambda,
+                                      cvm    = object[[idx]]$cvm,
+                                      nzero  = object[[idx]]$nzero,
+                                      alpha  = as.list(object[[idx]]$glmnet.fit$call)$alpha)
+             })
+    )
+  class(out) <- c("ensr_summary", class(out))
+  out
 }
-summary(out) 
 
-sout <- summary(out)
-sout[, z := standardize(cvm, stats = list(center = "median", scale = "IQR"))]
-sout[, z := standardize(cvm, stats = list(center = "mean", scale = "sd"))]
-sout[, z := standardize(cvm, stats = list(center = "min", scale = "sd"))]
+#' @export
+print.ensr_summary <- function(x, ...) {
+  NextMethod("print")
+}
 
-library(ggplot2)
-ggplot(sout) +
-  aes(x = alpha, y = lambda, z = log(z), color = log(z)) + 
-  # aes(x = alpha, y = lambda, z = nzero, color = factor(nzero)) + 
-  geom_point() +
-  geom_contour() +
-  scale_y_log10() +
-  # geom_text(mapping = aes(label = nzero, color = nzero)) +
-  geom_point(data = sout[cvm == min(cvm), ], color = "red") +
-  scale_color_gradient2()
+#' @export
+plot.ensr_summary <- function(x, ...) {
+  sout <- data.table::copy(x)
+  sout[, z := standardize(cvm, stats = list(center = "min", scale = "sd"))]
+  ggplot2::ggplot(sout) +
+  ggplot2::aes_string(x = "alpha", y = "lambda", z = "log(z)", color = "log(z)") +
+  ggplot2::geom_point() +
+  ggplot2::geom_contour() +
+  ggplot2::scale_y_log10() +
+  ggplot2::geom_point(data = sout[cvm == min(cvm), ], color = "red") +
+  ggplot2::scale_color_gradient2() 
+} 
 
-standardize(summary(out)$cvm, stats = list(center = "median", scale = "IQR")) 
-
+#' @export
+plot.ensr <- function(x, ...) {
+  plot(summary(x))
+}
 
 #' Predict Methods for ensr objects
 #'
@@ -95,34 +87,25 @@ standardize(summary(out)$cvm, stats = list(center = "median", scale = "IQR"))
 #'
 #' @inheritParams glmnet::predict.elnet
 #' @param object a \code{ensr} object
-#' @param cve a character string with the value "min" or "1se".  The default is "min".
 #' @param ... other arguments passed along to \code{predict}
 #' @name predict
 #' @export
-predict.ensr <- function(object, newx, cve = NULL, type=c("link","response","coefficients","nonzero","class"), exact = FALSE, newoffset, ...) {
+predict.ensr <- function(object, ...) {
+ 
+  pm <- preferable(object)
 
   cl <- as.list(match.call())
   cl[[1]] <- quote(predict)
 
-  if (is.null(cve)) {
-    cve <- "min"
-  }
+  cl$object <- pm
 
-  if (!(cve %in% c("min", "1se"))) {
-    warning(sprintf("%s is not valid for cve in predict.ensr, setting to 'min'.", cve))
-    cve <- "min"
-  }
-
-  po <- preferable(object, cve)
-  cl$object <- po
-
-  cl$s <- po[[paste0("lambda.", cve)]]
+  cl$s <- pm$cv_row$lambda
   eval(as.call(cl))
 }
 
 #' @rdname predict
 #' @export
-coef.ensr <- function(object, cve = NULL, exact = FALSE, ...) {
+coef.ensr <- function(object, ...) {
   cl <- as.list(match.call())
   cl[[1]] <- quote(predict)
   cl$type = "coefficients"
@@ -136,9 +119,6 @@ coef.ensr <- function(object, cve = NULL, exact = FALSE, ...) {
 #' largest alpha value.
 #'
 #' @param object an ensr object
-#' @param cve a character string, by default using \code{"min"} will use the
-#' \code{lambda.min} for selecting a preferable model.  \code{"1se"} will use
-#' \code{lambda.1se}.
 #' @param ... not currently used.
 #' @export
 preferable <- function(object, cve = "min", ...) {
@@ -146,22 +126,20 @@ preferable <- function(object, cve = "min", ...) {
 }
 
 #' @export
-preferable.ensr <- function(object, cve = "min", ...) {
-
-  ce <- paste0("cve.", cve)
-  le <- paste0("lambda.", cve)
+preferable.ensr <- function(object, ...) {
 
   sm <- summary(object)
-  sm <- sm[sm[[ce]] == min(sm[[ce]]), ]
+  sm <- sm[sm[["cvm"]] == min(sm[["cvm"]]), ]
+
   if (nrow(sm) > 1L) {
     sm <- sm[sm[['alpha']] == max(sm[['alpha']])]
   }
-  model_idx <- sm$model_idx
 
-  out <- object[[model_idx]] 
-  out$alpha <- sm$alpha
-  out$lambda.min_idx <- which(out$lambda == out$lambda.min)
-  out$lambda.1se_idx <- which(out$lambda == out$lambda.1se)
+  model_idx <- sm$l_index
+
+  out <- object[[model_idx]]$glmnet.fit
+  out$cv_row <- sm
+  attr(out$cv_row, "call") <- match.call()
   class(out) <- c("ensr_pref", class(out))
   out
 }

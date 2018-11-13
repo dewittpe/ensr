@@ -257,36 +257,34 @@ microbenchmark(
 #'
 #' # Searching for $\lambda$ and $\alpha$
 #'
-#' The `cv.glmnet` uses k-fold cross-validation for glmnet to find a value for
-#' $\lambda.$  This requires specifying an $\alpha.$  Find a preferable set of
-#' $\alpha$ and $\lambda$ you will need to fit several `cv.glmnet`, one for each
-#' value of $\alpha$ that you want to consider.  To illustrate how to do this we
-#' will model evaporation as a function of the noted predictors in the landfill
-#' data set.
-#'
-#' Start by building the input matrices for the predictors, `x_matrix`, and the
-#' output `y_matrix`.
 y_matrix <- as.matrix(scalled_landfill$evap)
 x_matrix <- as.matrix(scalled_landfill[, topsoil_porosity:weather_temp])
 
-ensr_obj <- ensr(x_matrix, y_matrix, standardize = FALSE)
+ensr_obj <- ensr(y = y_matrix, x = x_matrix, standardize = FALSE)
 
-summary(object = ensr_obj)
-summary(object = ensr_obj)[c(which.min(cve.min), which.min(lambda.1se))]
+ensr_obj_summary <- summary(object = ensr_obj)
+
+ensr_obj_summary[cvm == min(cvm)]
+
+preferable(ensr_obj)
+
+predict(ensr_obj, newx = x_matrix)
+
+
+plot(preferable(ensr_obj), label = TRUE)
+plot(ensr_obj)
+summary(ensr_obj)
 
 coef(ensr_obj)
-coef(ensr_obj, cve = "min")
-coef(ensr_obj, cve = "1se")
 
-coef(preferable(ensr_obj))
 
-preferable(ensr_obj, s = "min")
-preferable(ensr_obj, s = "1se")
 
-predict(ensr_obj, newx = x_matrix[1:2, ], cve = "min")
-predict(ensr_obj, newx = x_matrix[1:2, ], cve = "1se")
-predict(ensr_obj, newx = x_matrix[1:2, ], cve = "no")
-predict(ensr_obj, newx = x_matrix[1:2, ], cve = NULL)
+
+
+
+
+
+
 
 #'
 #' ## Cross-Validation Issues:
@@ -296,14 +294,17 @@ predict(ensr_obj, newx = x_matrix[1:2, ], cve = NULL)
 #' cross validation.
 foldid1 <- sample(seq(10), size = nrow(x_matrix), replace = TRUE)
 foldid2 <- sample(seq(10), size = nrow(x_matrix), replace = TRUE)
+foldid3 <- sample(seq(10), size = nrow(x_matrix), replace = TRUE)
 
 #'
-#' We will fit two ensr objects and report the smallest cve.min
-ensr_obj_1 <- ensr(x_matrix, y_matrix, standardize = FALSE, foldid = foldid1)
-ensr_obj_2 <- ensr(x_matrix, y_matrix, standardize = FALSE, foldid = foldid2)
+#' We will fit three ensr objects and report the smallest cvm
+ensr_obj_1 <- ensr(y = y_matrix, x = x_matrix, standardize = FALSE, alphas = seq(0.05, 0.95, by = 0.1), foldid = foldid1)
+ensr_obj_2 <- ensr(y = y_matrix, x = x_matrix, standardize = FALSE, alphas = seq(0.05, 0.95, by = 0.1), foldid = foldid2)
+ensr_obj_3 <- ensr(y = y_matrix, x = x_matrix, standardize = FALSE, alphas = seq(0.05, 0.95, by = 0.1), foldid = foldid3)
 
-summary(ensr_obj_1)[, .SD[cve.min == min(cve.min)]]
-summary(ensr_obj_2)[, .SD[cve.min == min(cve.min)]]
+summary(ensr_obj_1)[cvm == min(cvm)]
+summary(ensr_obj_2)[cvm == min(cvm)]
+summary(ensr_obj_3)[cvm == min(cvm)]
 
 #'
 #' There are small differences in the cross validation errors and the in the
@@ -311,15 +312,17 @@ summary(ensr_obj_2)[, .SD[cve.min == min(cve.min)]]
 #' is notable, that the differences in the regression coefficients is minor.
 #' In this case there are the same number of non-zero coefficients and the
 #' magnitudes are similar.
-cbind(coef(ensr_obj_1), coef(ensr_obj_2))
+cbind(coef(ensr_obj_1), coef(ensr_obj_2), coef(ensr_obj_3))
 
 #'
 #' Consider a different output, percolation through the topsoil.
-ensr_obj_1 <- ensr(x_matrix, as.matrix(scalled_landfill$perc_topsoil), standardize = FALSE, foldid = foldid1)
-ensr_obj_2 <- ensr(x_matrix, as.matrix(scalled_landfill$perc_topsoil), standardize = FALSE, foldid = foldid2)
+ensr_obj_1 <- ensr(x = x_matrix, y = as.matrix(scalled_landfill$perc_topsoil), standardize = FALSE, foldid = foldid1)
+ensr_obj_2 <- ensr(x = x_matrix, y = as.matrix(scalled_landfill$perc_topsoil), standardize = FALSE, foldid = foldid2)
+ensr_obj_3 <- ensr(x = x_matrix, y = as.matrix(scalled_landfill$perc_topsoil), standardize = FALSE, foldid = foldid3)
 
-summary(ensr_obj_1)[, .SD[cve.min == min(cve.min)]]
-summary(ensr_obj_2)[, .SD[cve.min == min(cve.min)]]
+summary(ensr_obj_1)[cvm == min(cvm)]
+summary(ensr_obj_2)[cvm == min(cvm)]
+summary(ensr_obj_3)[cvm == min(cvm)]
 
 #'
 #' One could argue there is a major differnce in the result between the two
@@ -330,24 +333,54 @@ summary(ensr_obj_2)[, .SD[cve.min == min(cve.min)]]
 ############################## EXPLORING ###########################
 
 #+ eval = FALSE
+# newwer dev work
+x <- Xmat <- model.matrix( ~ . - injury1 - injury2 - injury3 - 1, data = tbi)
+y <- Yvec <- matrix(tbi$injury1, ncol = 1)
+
+out <- ensr(Yvec, Xmat, standardize = TRUE)
+str(out, max.level = 1)
+
+summary(out)
+
+sout <- summary(out)
+sout[, z := standardize(cvm, stats = list(center = "median", scale = "IQR"))]
+sout[, z := standardize(cvm, stats = list(center = "mean", scale = "sd"))]
+sout[, z := standardize(cvm, stats = list(center = "min", scale = "sd"))]
+
+library(ggplot2)
+ggplot(sout) +
+  aes(x = alpha, y = lambda, z = log(z), color = log(z)) +
+  # aes(x = alpha, y = lambda, z = nzero, color = factor(nzero)) +
+  geom_point() +
+  geom_contour() +
+  scale_y_log10() +
+  # geom_text(mapping = aes(label = nzero, color = nzero)) +
+  geom_point(data = sout[cvm == min(cvm), ], color = "red") +
+  scale_color_gradient2()
+
+standardize(summary(out)$cvm, stats = list(center = "median", scale = "IQR"))
+
+
+
+#+ eval = FALSE
 # Make a lambda_max function
 lambda_max <- function(y, x, alpha) {
   # y <- scale(y)
   # x <- apply(x, 2, scale)
-  N <- nrow(x) 
+  N <- nrow(x)
   # if (isTRUE(all.equal(0, alpha))) alpha <- 0.001
-  # if (isTRUE(all.equal(1, alpha))) alpha <- 0.999 
+  # if (isTRUE(all.equal(1, alpha))) alpha <- 0.999
   # max(t(x) %*% (y - mean(y) * (1 - mean(y)))) / (alpha * N)
   rbind(
-  max( abs( t( (y - mean(y) * (1 - mean(y))) )  %*% x) ) / (alpha * N) 
-  max( abs( t( (y ))   %*% x) ) / (alpha * N) 
+  max( abs( t( (y - mean(y) * (1 - mean(y))) )  %*% x) ) / (alpha * N)
+  max( abs( t( (y ))   %*% x) ) / (alpha * N)
   )
-  # max( abs( t(y)  %*% x) ) / (alpha * N) 
+  # max( abs( t(y)  %*% x) ) / (alpha * N)
 }
 
 lambda_max(y = matrix(tbi$injury1, ncol = 1),
            x = model.matrix( ~ . - injury1 - injury2 - injury3 - 1, data = tbi),
-           alpha = c(0.001, .5, 1)) 
+           alpha = c(0.001, .5, 1))
 
 YVEC <-  matrix(tbi$injury1, ncol = 1)
 XMAT <- model.matrix( ~ . - injury1 - injury2 - injury3 - 1, data = tbi)
@@ -395,7 +428,7 @@ fit0 <- glmnet(x = model.matrix( ~ . - injury1 - injury2 - injury3 - 1, data = t
                y = matrix(tbi$injury1, ncol = 1),
                family = "binomial",
                standardize = FALSE,
-               alpha = 0) 
+               alpha = 0)
 fit1 <- update(fit0, alpha = 1)
 fit5 <- update(fit0, alpha = 0.5)
 max(fit0$lambda)
@@ -468,7 +501,7 @@ ggplot(results) +
   scale_colour_gradient(low = "blue", high = "red")
 
 ggplot(results) +
-  aes(x = nzero, y = cvm, group = factor(alpha), color = factor(alpha)) + 
+  aes(x = nzero, y = cvm, group = factor(alpha), color = factor(alpha)) +
   geom_point() + geom_line() +
   facet_zoom(x = nzero > 10, y = cvm < 0.3)
 
@@ -497,7 +530,7 @@ goo(lambdas)
 
 foo <- function(x) {
   firsts <- x[-length(x)]
-  seconds <- x[-1] 
+  seconds <- x[-1]
   out <- c(2/3 *firsts + 1/3 * seconds, 1/3 * firsts + 2/3 * seconds, x)
   out <- sort(out)
   out

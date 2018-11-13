@@ -56,7 +56,6 @@
 #'        title(main = "standardize == FALSE")
 #'      })
 #'
-#' @export
 lambda_max <- function(y, x, standardize = TRUE, alpha = 0, ...) {
 
   a0 <- sapply(lapply(alpha, all.equal, 0), isTRUE)
@@ -101,7 +100,6 @@ lambda_max <- function(y, x, standardize = TRUE, alpha = 0, ...) {
 #'                         mapping = ggplot2::aes(z = cos(a) + sin(log10(l)))) +
 #'   ggplot2::scale_color_gradient2(low = "blue", high = "red", mid = "grey")
 #'
-#' @export
 lambda_alpha_grid <- function(lambdas, alphas, n = 10L) {
 
   all_alphas <- sort(c(alphas, alphas[-length(alphas)] + diff(alphas) / 2))
