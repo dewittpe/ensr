@@ -9,10 +9,6 @@ preferable(object, cve = "min", ...)
 \arguments{
 \item{object}{an ensr object}
 
-\item{cve}{a character string, by default using \code{"min"} will use the
-\code{lambda.min} for selecting a preferable model.  \code{"1se"} will use
-\code{lambda.1se}.}
-
 \item{...}{not currently used.}
 }
 \description{

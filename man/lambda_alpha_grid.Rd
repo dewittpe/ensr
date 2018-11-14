@@ -4,12 +4,15 @@
 \alias{lambda_alpha_grid}
 \title{Lambda Alpha Grid}
 \usage{
-lambda_alpha_grid(lambdas, alphas)
+lambda_alpha_grid(lambdas, alphas, nlambda = 10L)
 }
 \arguments{
 \item{lambdas}{a vector of max values for each alpha given}
 
 \item{alphas}{a vector a alpha values corresponding to the max lambdas}
+
+\item{nlambda}{number of lambdas to generate for each alpha before creating the
+grid}
 }
 \description{
 Construct a data frame with values for lambda and alpha with an indicator to

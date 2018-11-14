@@ -6,60 +6,12 @@
 \alias{coef.ensr}
 \title{Predict Methods for ensr objects}
 \usage{
-\method{predict}{ensr}(object, newx, cve = NULL, type = c("link",
-  "response", "coefficients", "nonzero", "class"), exact = FALSE,
-  newoffset, ...)
+\method{predict}{ensr}(object, ...)
 
-\method{coef}{ensr}(object, cve = NULL, exact = FALSE, ...)
+\method{coef}{ensr}(object, ...)
 }
 \arguments{
 \item{object}{a \code{ensr} object}
-
-\item{newx}{Matrix of new values for \code{x} at which predictions are
-  to be made. Must be a matrix; can be sparse as in \code{Matrix}
-  package. This argument is not used for \code{type=c("coefficients","nonzero")}}
-
-\item{cve}{a character string with the value "min" or "1se".  The default is "min".}
-
-\item{type}{Type of prediction required. Type \code{"link"} gives the
-    linear predictors for \code{"binomial"}, \code{"multinomial"},
-    \code{"poisson"} or \code{"cox"}  models; for  \code{"gaussian"}
-    models it gives the fitted
-    values. Type \code{"response"} gives the fitted probabilities for
-    \code{"binomial"} or \code{"multinomial"}, fitted mean for
-    \code{"poisson"} and the fitted relative-risk for \code{"cox"}; for \code{"gaussian"}
-    type \code{"response"} is equivalent to type \code{"link"}. Type
-    \code{"coefficients"} computes the coefficients at the requested
-    values for \code{s}.  Note that for
-    \code{"binomial"} models, results are returned only for the class
-    corresponding to the second level of the factor response.
-    Type \code{"class"} applies only to
-    \code{"binomial"} or \code{"multinomial"} models, and produces the
-    class label corresponding to the maximum probability. Type
-    \code{"nonzero"} returns a list of the indices of the nonzero
-    coefficients for each value of \code{s}.}
-
-\item{exact}{This argument is relevant only when predictions are made at
-    values of \code{s} (lambda) \emph{different} from those used in the fitting
-    of the original model. If \code{exact=FALSE} (default), then the predict function uses linear interpolation
-  to make predictions for values of \code{s} (lambda) that do not coincide with
-  those used in the fitting algorithm. While this is often a good
-  approximation, it can sometimes be a bit coarse.
-  With \code{exact=TRUE}, these different values of \code{s} are merged
-  (and sorted) with
-  \code{object$lambda}, and the model is refit before predictions are
-  made. In this case, it is required to supply the original
-  data \code{x=} and \code{y=} as additional
-  named  arguments to \code{predict()} or \code{coef()}.  
- The workhorse \code{predict.glmnet()} needs to  \code{update} the model,
- and so needs the data used to create it. The same is
-  true of \code{weights}, \code{offset}, \code{penalty.factor},
-  \code{lower.limits}, \code{upper.limits} if these were used in the
-  original call. Failure to do so will result in an error.}
-
-\item{newoffset}{If an offset is used in the fit, then one must be
-   supplied for making predictions (except for
-   \code{type="coefficients"}  or \code{type="nonzero"})}
 
 \item{...}{other arguments passed along to \code{predict}}
 }

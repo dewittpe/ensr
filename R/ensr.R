@@ -6,7 +6,7 @@
 #' @param alphas a sequence alpha values
 #'
 #' @export
-ensr <- function(y, x, alphas = seq(0.00, 1.00, length = 10), nfolds = 10L, foldid, ...) {
+ensr <- function(y, x, alphas = seq(0.00, 1.00, length = 10), nlambda = 100L, standardize = TRUE, nfolds = 10L, foldid, ...) {
 
   # build a single set of folds
   if (missing(foldid)) {
@@ -16,9 +16,9 @@ ensr <- function(y, x, alphas = seq(0.00, 1.00, length = 10), nfolds = 10L, fold
   cl <- as.list(match.call())
   cl[[1]] <- quote(glmnet::cv.glmnet)
   cl$alphas <- NULL
-
-  lmax <- lambda_max(y, x, alphas, standardize = cl$standardize)
-  lgrid <- lambda_alpha_grid(lmax, alphas)
+  
+  lmax <- lambda_max(y, x, alphas, standardize = standardize)
+  lgrid <- lambda_alpha_grid(lmax, alphas, nlambda = nlambda)
 
   l_and_a <- split(lgrid$lgrid, lgrid$lgrid$a)
 
@@ -33,6 +33,12 @@ ensr <- function(y, x, alphas = seq(0.00, 1.00, length = 10), nfolds = 10L, fold
 
   class(models) <- "ensr"
   models
+}
+
+#' @export
+print.ensr <- function(x, ...) {
+  cat("A ensr object with", length(x), "cv.glmnet objects.\n")
+  str(x, max.level = 0L)
 }
 
 #' @export
@@ -66,7 +72,7 @@ plot.ensr_summary <- function(x, ...) {
   ggplot2::geom_point() +
   ggplot2::geom_contour() +
   ggplot2::scale_y_log10() +
-  ggplot2::geom_point(data = sout[cvm == min(cvm), ], color = "red") +
+  ggplot2::geom_point(data = sout[cvm == min(cvm), ], cex = 2,  pch = 4, color = "red") +
   ggplot2::scale_color_gradient2() 
 } 
 

@@ -256,25 +256,60 @@ microbenchmark(
 # */
 #'
 #' # Searching for $\lambda$ and $\alpha$
-#'
+#' Searching for a combination of $\lambda$ and $\alpha$ resulting in the lowest
+#' cross validation error is done with a call to `ensr`.  The arguments to
+#' `enser` are the same as those made to `cv.glment` with the addition of
+#' `alphas`, a sequence of $\alpha$ values to use.  Please note that `ensr` will
+#' add `length(alphas) - 1` additional values, the midpoint between the given
+#' set, in the construciton of a $\lambda$--$\alpha$ grid to search.  For the
+#' initial example we will fit an elastic net for modeling the evaporation in
+#' the landfill data constructed above.
+set.seed(42)
 y_matrix <- as.matrix(scalled_landfill$evap)
 x_matrix <- as.matrix(scalled_landfill[, topsoil_porosity:weather_temp])
 
 ensr_obj <- ensr(y = y_matrix, x = x_matrix, standardize = FALSE)
+ensr_obj
 
+#'
+#' The `ensr_obj` is a `ensr` object which is a list of `cv.glment` objects.
+#' The length of the list is determined by the length of the $\alphas$ argument.
+#' The default for `alphas` is `r deparse(as.list(args(ensr))$alphas)`.
+#'
+#' The summary method for `ensr` objects returns and `data.table` with value of
+#' $\lambda$, $\alpha$, the mean cross-validation error `cvm`, and the number of
+#' non-zero coefficients.  The `l_index` the the list index of the `ensr` object
+#' associated with the noted $\alpha$ value.
 ensr_obj_summary <- summary(object = ensr_obj)
+ensr_obj_summary
 
+#'
+#' The preferable model is the one with the minimum cross-validation error.
 ensr_obj_summary[cvm == min(cvm)]
 
-preferable(ensr_obj)
+#'
+#' A quick way to get the preferable model is to call the `preferable` method.
+str( preferable(ensr_obj), max.level = 1L)
 
-predict(ensr_obj, newx = x_matrix)
+#'
+#' The return is a `elnet` `glmnet` object with one additional list element, the
+#' `ensr_summary` used to seledc this preferable model.
+#'
+#' Since the return of `preferable` inherits the same class as a the objects
+#' returned from a call to `glmnet::glmnet` the same methods can be used, for
+#' examle, plotting
+par(mfrow = c(1, 3))
+plot(preferable(ensr_obj), xvar = "norm")
+plot(preferable(ensr_obj), xvar = "lambda")
+plot(preferable(ensr_obj), xvar = "dev")
 
+#'
+#'
+plot(ensr_obj) +
+  ggplot2::theme_bw() +
+  ggforce::facet_zoom(x = 0.50 < alpha & alpha < 0.90, y = 5e-4 < lambda & lambda < 1.5e-3)
 
-plot(preferable(ensr_obj), label = TRUE)
-plot(ensr_obj)
 summary(ensr_obj)
-
 coef(ensr_obj)
 
 
