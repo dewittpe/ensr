@@ -14,7 +14,7 @@ vignette: >
 
 ```{r label=setup, include = FALSE}
 library(knitr)
-knitr::opts_chunk$set(collapse = TRUE, eval = F)
+knitr::opts_chunk$set(collapse = TRUE)
 options(qwraps2_markup = "markdown")
 ```
 
@@ -32,7 +32,8 @@ results.
 ```{r label="load_and_attach_ensr"}
 library(ensr)
 library(data.table)
-library(microbenchmark)
+library(ggplot2)
+library(ggforce)
 options(datatable.print.topn  = 3L,
         datatable.print.nrows = 3L)
 ```
@@ -100,7 +101,7 @@ data(landfill, package = "ensr")
 
 Searching for a combination of $\lambda$ and $\alpha$ resulting in the lowest
 cross validation error is done with a call to `ensr`.  The arguments to
-`enser` are the same as those made to `cv.glment` with the addition of
+`ensr` are the same as those made to `cv.glment` with the addition of
 `alphas`, a sequence of $\alpha$ values to use.  Please note that `ensr` will
 add `length(alphas) - 1` additional values, the midpoint between the given
 set, in the construciton of a $\lambda$--$\alpha$ grid to search.  For the
@@ -147,11 +148,11 @@ str( preferable(ensr_obj), max.level = 1L)
 
 
 The return is a `elnet` `glmnet` object with one additional list element, the
-`ensr_summary` used to seledc this preferable model.
+`ensr_summary` used to select this preferable model.
 
-Since the return of `preferable` inherits the same class as a the objects
+Since the return of `preferable` inherits the same class as a object
 returned from a call to `glmnet::glmnet` the same methods can be used, for
-examle, plotting
+example, plotting
 
 ```{r }
 par(mfrow = c(1, 3))
@@ -161,37 +162,125 @@ plot(preferable(ensr_obj), xvar = "dev")
 ```
 
 
-
+Another graphical way to look at the results of the `ensr` is to use the
+provided plotting method.  In the plot below each of the $\lambda$ (y-axis,
+$\log_{10}$ scale) and $\alpha$ (x-axis) values considered in the `ensr_obj`
+are plotted.  The coloring is denoted as `log10(z)` where `z = (cvm -
+min(cvm)) / sd(cvm)`.   The color scale is set to have low values, values
+near the minimum mean cross validation error, to be dark green, values moving
+further from the min are lighter green, moving to white then purple.
 
 ```{r }
 plot(ensr_obj) +
-  ggplot2::theme_bw() +
-  ggforce::facet_zoom(x = 0.50 < alpha & alpha < 0.90, y = 5e-4 < lambda & lambda < 1.5e-3)
-
-summary(ensr_obj)
-coef(ensr_obj)
+  theme_bw() +
+  facet_zoom(x = 0.50 < alpha & alpha < 0.90, y = 5e-4 < lambda & lambda < 1.5e-3)
 ```
 
 
-## Cross-Validation Issues:
+In this graphic we see the minimum mean cross validation error occurs within
+the models with $\alpha$ = `r summary(ensr_obj)[cvm == min(cvm), "alpha"]`.
 
-This is something we need to look into. We will perform the search for a
-preferable model with two different foldid vectors, both set up for 10-fold
-cross validation.
+```{r }
+summary(ensr_obj)[cvm == min(cvm)]
+```
+
+
+Inspection of the plot suggest there is another minimum worth looking at, for
+$\alpha$ = `r summary(ensr_obj)[l_index == 16][cvm == min(cvm), "alpha"]`.
+
+```{r }
+summary(ensr_obj)[, .SD[cvm == min(cvm)], by = alpha][l_index %in% c(13, 16)]
+```
+
+
+The difference in the mean cross validation error between these two results
+is very small, and perhaps is not meaningful.  What is notable is that the
+number of non-zero (`nzero`) coefficients are different.  With a very small
+increase in the mean cross validation error, one more variable has its
+regression coefficient shrunk to zero.  If parsimony is your primary
+objective the second model might be your preferable model.
+
+We can look at the mean cross validation errors by nzero too.
+
+```{r }
+summary(ensr_obj)[, .SD[cvm == min(cvm)], by = nzero]
+
+ggplot(summary(ensr_obj)[, .SD[cvm == min(cvm)], by = nzero]) +
+  theme_bw() +
+  aes(x = nzero, y = cvm) +
+  geom_point() +
+  geom_line() +
+  facet_zoom(xy = cvm < 0.05)
+```
+
+
+Based on the graphic above, if the objective is lowest cross validation error
+and parsimony, you could argue that the model with 14 non-zero coefficients
+is the preferable model as the is very little to gain, in terms of reducing
+the mean cross validation error, by using a model with fifteen or more
+non-zero coefficients.  But then again, that argument could be made about the
+model with only five non-zero coefficients.
+
+```{r }
+summary(ensr_obj)[nzero %in% c(5, 15)] [, .SD[cvm == min(cvm)], by = nzero]
+```
+
+
+To get the set of coefficients associated with the above:
+
+```{r }
+landfill_evap_coef5  <- coef(ensr_obj[[19]], s = 0.0020028865)
+landfill_evap_coef15 <- coef(ensr_obj[[16]], s = 0.0007266755)
+```
+
+
+The table below lists the variables for each model in descending order of the
+absolute value of the regression coefficients.  Since the predictors had been
+standardized the relative magnitude of the coefficients can server has a
+sensitivity/influence/importance metric.
+
+```{r }
+qwraps2::qable(
+               data.table(
+                          variable = c(rownames(landfill_evap_coef5),
+                                       rownames(landfill_evap_coef15)),
+                          value    = c(as.vector(matrix(landfill_evap_coef5)),
+                                       as.vector(matrix(landfill_evap_coef15))),
+                          nzero    = c(rep(5, 36), rep(15, 36))
+                          )[
+                            abs(value) >= 1e-10 & variable != "(Intercept)"
+                            ][
+                            order(nzero, -abs(value))
+                            ][
+                            ,
+                            nzero := NULL
+                            ]
+               ,
+               rgroup = c("nzero = 5" = 5, "nzero = 15"= 15),
+               rnames = c(1:5, 1:15))
+```
+
+
+The variables most important for modeling evaporation are `weather_temp`
+(average temperature over the last 100 years),
+`wind` (average wind speed), `weather_solrad` (average solar radiation), and
+`rh` (relative humidity).  The magnitude of the fifth and lower ranked
+variables is considerably smaller than these four and thus not as important.
+
+
+
+# Cross-Validation Issues:
+
+The results above are subject to the foldid, as shown below:
 
 ```{r }
 foldid1 <- sample(seq(10), size = nrow(x_matrix), replace = TRUE)
 foldid2 <- sample(seq(10), size = nrow(x_matrix), replace = TRUE)
 foldid3 <- sample(seq(10), size = nrow(x_matrix), replace = TRUE)
-```
 
-
-We will fit three ensr objects and report the smallest cvm
-
-```{r }
-ensr_obj_1 <- ensr(y = y_matrix, x = x_matrix, standardize = FALSE, alphas = seq(0.05, 0.95, by = 0.1), foldid = foldid1)
-ensr_obj_2 <- ensr(y = y_matrix, x = x_matrix, standardize = FALSE, alphas = seq(0.05, 0.95, by = 0.1), foldid = foldid2)
-ensr_obj_3 <- ensr(y = y_matrix, x = x_matrix, standardize = FALSE, alphas = seq(0.05, 0.95, by = 0.1), foldid = foldid3)
+ensr_obj_1 <- ensr(y = y_matrix, x = x_matrix, standardize = FALSE, foldid = foldid1)
+ensr_obj_2 <- ensr(y = y_matrix, x = x_matrix, standardize = FALSE, foldid = foldid2)
+ensr_obj_3 <- ensr(y = y_matrix, x = x_matrix, standardize = FALSE, foldid = foldid3)
 
 summary(ensr_obj_1)[cvm == min(cvm)]
 summary(ensr_obj_2)[cvm == min(cvm)]
@@ -210,235 +299,12 @@ cbind(coef(ensr_obj_1), coef(ensr_obj_2), coef(ensr_obj_3))
 ```
 
 
-Consider a different output, percolation through the topsoil.
+One could argue there is a major difference in the result between the two
+foldid.  Using the cvm, the `foldid3` leads to 18 non-zero coefficients
+whereas foldid1 and foldid2 leads to only 14 non-zero coefficients.
 
-```{r }
-ensr_obj_1 <- ensr(x = x_matrix, y = as.matrix(landfill$perc_topsoil), standardize = FALSE, foldid = foldid1)
-ensr_obj_2 <- ensr(x = x_matrix, y = as.matrix(landfill$perc_topsoil), standardize = FALSE, foldid = foldid2)
-ensr_obj_3 <- ensr(x = x_matrix, y = as.matrix(landfill$perc_topsoil), standardize = FALSE, foldid = foldid3)
-
-summary(ensr_obj_1)[cvm == min(cvm)]
-summary(ensr_obj_2)[cvm == min(cvm)]
-summary(ensr_obj_3)[cvm == min(cvm)]
-```
-
-
-One could argue there is a major differnce in the result between the two
-foldid.  Using the cve.min, the foldid1 leads to 19 non-zero coefficients
-whereas foldid2 leads to 22 non-zero coefficients.
-
-
-```{r }
-############################## EXPLORING ###########################
-
-```{r eval = FALSE}
-# newwer dev work
-x <- Xmat <- model.matrix( ~ . - injury1 - injury2 - injury3 - 1, data = tbi)
-y <- Yvec <- matrix(tbi$injury1, ncol = 1)
-
-out <- ensr(Yvec, Xmat, standardize = TRUE)
-str(out, max.level = 1)
-
-summary(out)
-
-sout <- summary(out)
-sout[, z := standardize(cvm, stats = list(center = "median", scale = "IQR"))]
-sout[, z := standardize(cvm, stats = list(center = "mean", scale = "sd"))]
-sout[, z := standardize(cvm, stats = list(center = "min", scale = "sd"))]
-
-library(ggplot2)
-ggplot(sout) +
-  aes(x = alpha, y = lambda, z = log(z), color = log(z)) +
-  # aes(x = alpha, y = lambda, z = nzero, color = factor(nzero)) +
-  geom_point() +
-  geom_contour() +
-  scale_y_log10() +
-  # geom_text(mapping = aes(label = nzero, color = nzero)) +
-  geom_point(data = sout[cvm == min(cvm), ], color = "red") +
-  scale_color_gradient2()
-
-standardize(summary(out)$cvm, stats = list(center = "median", scale = "IQR"))
-
-
-
-```{r eval = FALSE}
-# Make a lambda_max function
-# lambda_max <- function(y, x, alpha) {
-#   # y <- scale(y)
-#   # x <- apply(x, 2, scale)
-#   N <- nrow(x)
-#   # if (isTRUE(all.equal(0, alpha))) alpha <- 0.001
-#   # if (isTRUE(all.equal(1, alpha))) alpha <- 0.999
-#   # max(t(x) %*% (y - mean(y) * (1 - mean(y)))) / (alpha * N)
-#   rbind(
-#   max( abs( t( (y - mean(y) * (1 - mean(y))) )  %*% x) ) / (alpha * N)
-#   max( abs( t( (y ))   %*% x) ) / (alpha * N)
-#   )
-#   # max( abs( t(y)  %*% x) ) / (alpha * N)
-# }
-# 
-# lambda_max(y = matrix(tbi$injury1, ncol = 1),
-#            x = model.matrix( ~ . - injury1 - injury2 - injury3 - 1, data = tbi),
-#            alpha = c(0.001, .5, 1))
-# 
-# YVEC <-  matrix(tbi$injury1, ncol = 1)
-# XMAT <- model.matrix( ~ . - injury1 - injury2 - injury3 - 1, data = tbi)
-# f <- lm(YVEC ~  XMAT)
-# 
-# max(abs(t(XMAT) %*% (residuals(f) + predict(f, type = "terms")))) / (0.5 * nrow(XMAT))
-# max(abs(t(apply(XMAT, 2, scale)) %*% (residuals(f) + predict(f, type = "terms")))) / (0.5 * nrow(XMAT))
-# g <- glmnet(y = YVEC, x = XMAT, standardize = FALSE, alpha = 0.5)
-# max(g$lambda)
-# max(update(g, standardize = TRUE)$lambda)
-# 
-# coef(g)
-# 
-# n <- 500
-# p <- 3
-# b <- c(-5,3,2,0)
-# b <- c(3,2,0)
-# 
-# X <- cbind(rep(1,n),scale(matrix(rnorm(p*n),nrow=n)))
-# X <- cbind(scale(matrix(rnorm(p*n),nrow=n)))
-# Y <- rbinom(n,1,prob = exp(X%*%b)/(1 + exp(X%*%b)))
-# 
-# alpha <- .5
-# 
-# max( abs(t(Y - mean(Y)*(1-mean(Y))) %*% X ) )/ ( alpha * n) # largest lambda value
-# eg_fit <- glmnet(x=X,y=Y,family="poisson",alpha = alpha,standardize=FALSE)
-# eg_fit$lambda[1] # largest lambda value
-# lambda_max(Y, X, 0.5)
-# 
-# coef(eg_fit)
-# 
-# f <- lm(Y ~ X)
-# 
-# max(abs(residuals(f) - predict(f, type = "terms"))) / (alpha * n)
-# 
-# sum(X[1, ] *  coef(f)[-1] )
-# predict(f, type = "terms")[1]
-# 
-# max(abs(t(residuals(f) - predict(f, type = "terms"))) %*% X) / (alpha * n)
-
-
-############################## EXPLORING ###########################
-## Need to set up a grid of lambda and alpha values to work with and use LOOCV
-fit0 <- glmnet(x = model.matrix( ~ . - injury1 - injury2 - injury3 - 1, data = tbi),
-               y = matrix(tbi$injury1, ncol = 1),
-               family = "binomial",
-               standardize = FALSE,
-               alpha = 0)
-fit1 <- update(fit0, alpha = 1)
-fit5 <- update(fit0, alpha = 0.5)
-max(fit0$lambda)
-max(fit1$lambda)
-max(fit5$lambda)
-
-coef(fit0)
-coef(fit1)
-coef(fit5)
-
-par(mfrow = c(3, 2))
-hist(fit0$lambda)
-hist(log10(fit0$lambda))
-hist(fit1$lambda)
-hist(log10(fit1$lambda))
-hist(fit5$lambda)
-hist(log10(fit5$lambda))
-
-my_lambda <- sort(c(fit0$lambda, fit1$lambda))
-
-str(fit0)
-
-if (interactive()) {
-  library(doMC)
-  registerDoMC(cores = 9L)
-}
-
-cvfits <-
-  lapply(seq(0, 1, by = 0.1),
-         function(a) {
-           cv.glmnet(x = model.matrix( ~ . - injury1 - injury2 - injury3 - 1, data = tbi),
-                     y = matrix(tbi$injury1, ncol = 1),
-                     alpha = a,
-                     lambda = my_lambda,
-                     nfolds = nrow(tbi),
-                     grouped = FALSE,
-                     family = "binomial",
-                     parallel = TRUE)
-         })
-
-
-str(cvfits, max.level = 1L)
-str(cvfits[[1]], max.level = 1L)
-as.list(cvfits[[1]]$glmnet.fit$call)
-
-library(dplyr)
-
-results <-
-  lapply(cvfits, function(x) {
-           data.frame(lambda = x$lambda, cvm = x$cvm, nzero = x$nzero)
-         }) %>%
-  dplyr::bind_rows(.id = "alpha") %>%
-  dplyr::mutate(alpha = seq(0, 1, by = 0.1)[as.integer(alpha)])
-
-library(ggplot2)
-library(ggforce)
-
-ggplot(results) +
-  aes(x = alpha, y = log10(lambda), color = cvm) +
-  geom_point() +
-  geom_point(data = {results %>% dplyr::group_by(alpha) %>% dplyr::filter(lambda == min(lambda))}, color = "red", size = 2)
-
-ggplot(results) +
-  theme_bw() +
-  aes(x = alpha, y = log10(lambda), z = log10(cvm), color = log10(cvm))  +
-  # geom_tile() +
-  geom_point() +
-  geom_contour() +
-  # stat_density_2d(mapping = aes(colour = log10(cvm)))
-  scale_colour_gradient(low = "blue", high = "red")
-
-ggplot(results) +
-  aes(x = nzero, y = cvm, group = factor(alpha), color = factor(alpha)) +
-  geom_point() + geom_line() +
-  facet_zoom(x = nzero > 10, y = cvm < 0.3)
-
-# thought: git the lambda ranges for
-
-
-alphas <- seq(0, 1, by = 0.1)
-cl <- as.list(fit0$call)
-
-glmnets <- lapply(alphas, function(a) {cl$alpha <- a; eval(as.call(cl))})
-
-lambdas <- lapply(glmnets, `[[`, 'lambda')
-
-goo <- function(x) {
-  unlist(
-  list(
-  rep(x[1], times = 2)
-  ,
-  rep(x[-c(1, length(x))], each = 3)
-  ,
-  rep(x[length(x)], times = 2)
-  ) )
-}
-goo(lambdas)
-
-
-foo <- function(x) {
-  firsts <- x[-length(x)]
-  seconds <- x[-1]
-  out <- c(2/3 *firsts + 1/3 * seconds, 1/3 * firsts + 2/3 * seconds, x)
-  out <- sort(out)
-  out
-}
-foo(alphas)
-
-rep(foo(alphas), each = 2)
-```
-
+It is recommended multiple CV runs or bootstrapping is used to select a
+prefereable model.
 
 
 # Session Info

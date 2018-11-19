@@ -54,7 +54,7 @@ set.seed(42)
 #'
 #'
 #' Construction of the synthetic data set is done by generating a data set with
-#' the predictor variables.  We satrt
+#' the predictor variables.
 TBI_SUBJECTS <- 1323L
 
 tbi <- data.table(age    = round(rweibull(TBI_SUBJECTS, shape = 1.9, scale = 2000)),
@@ -63,7 +63,7 @@ tbi <- data.table(age    = round(rweibull(TBI_SUBJECTS, shape = 1.9, scale = 200
 
 #'
 #' The `pcode`s and `ncode` variables are difficult to simulate.  There are 64
-#' permutations for each set.  We built two vecots with realtive frequences of
+#' permutations for each set.  We built two vectors with relative frequencies of
 #' the codes.
 pcodes <-
   c(`0.0.0.0.0.0` = 1230, `1.0.0.0.0.0` = 130, `0.1.0.0.0.0` = 40,
@@ -104,7 +104,7 @@ ncodes <-
     `1.1.1.1.1.1` = 2)
 
 #'
-#' We generated the code varibales by taking a random sample of the names of the
+#' We generated the code variables by taking a random sample of the names of the
 #' above objects, splitting the names by the `.`, and coercing the result to a
 #' data.table.
 pcodes <-

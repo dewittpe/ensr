@@ -56,7 +56,7 @@ The columns of this data set are:
 
 
 Construction of the synthetic data set is done by generating a data set with
-the predictor variables.  We satrt
+the predictor variables.
 
 ```{r }
 TBI_SUBJECTS <- 1323L
@@ -68,7 +68,7 @@ tbi <- data.table(age    = round(rweibull(TBI_SUBJECTS, shape = 1.9, scale = 200
 
 
 The `pcode`s and `ncode` variables are difficult to simulate.  There are 64
-permutations for each set.  We built two vecots with realtive frequences of
+permutations for each set.  We built two vectors with relative frequencies of
 the codes.
 
 ```{r }
@@ -112,7 +112,7 @@ ncodes <-
 ```
 
 
-We generated the code varibales by taking a random sample of the names of the
+We generated the code variables by taking a random sample of the names of the
 above objects, splitting the names by the `.`, and coercing the result to a
 data.table.
 

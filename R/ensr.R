@@ -16,7 +16,7 @@ ensr <- function(y, x, alphas = seq(0.00, 1.00, length = 10), nlambda = 100L, st
   cl <- as.list(match.call())
   cl[[1]] <- quote(glmnet::cv.glmnet)
   cl$alphas <- NULL
-  
+
   lmax <- lambda_max(y, x, alphas, standardize = standardize)
   lgrid <- lambda_alpha_grid(lmax, alphas, nlambda = nlambda)
 
@@ -42,7 +42,7 @@ print.ensr <- function(x, ...) {
 }
 
 #' @export
-summary.ensr <- function(object, ...) { 
+summary.ensr <- function(object, ...) {
   out <-
     data.table::rbindlist(
       lapply(seq_along(object),
@@ -66,19 +66,23 @@ print.ensr_summary <- function(x, ...) {
 #' @export
 plot.ensr_summary <- function(x, ...) {
   sout <- data.table::copy(x)
-  sout[, z := standardize(cvm, stats = list(center = "min", scale = "sd"))]
+  data.table::set(sout, j = "z", value = standardize(sout$cvm, stats = list(center = "min", scale = "sd")))
+  imin <- which.min(sout$cvm)
+
   ggplot2::ggplot(sout) +
-  ggplot2::aes_string(x = "alpha", y = "lambda", z = "log(z)", color = "log(z)") +
+  ggplot2::aes_string(x = "alpha", y = "lambda", z = "log10(z)", color = "log10(z)") +
   ggplot2::geom_point() +
   ggplot2::geom_contour() +
   ggplot2::scale_y_log10() +
-  ggplot2::geom_point(data = sout[cvm == min(cvm), ], cex = 2,  pch = 4, color = "red") +
-  ggplot2::scale_color_gradient2() 
-} 
+  ggplot2::geom_point(data = sout[imin, ], cex = 2,  pch = 4, color = "red") +
+  ggplot2::scale_color_gradient2(low = "#1b7837", high = "#762183") +
+  ggplot2::xlab(expression(alpha)) +
+  ggplot2::ylab(expression(lambda))
+}
 
 #' @export
 plot.ensr <- function(x, ...) {
-  plot(summary(x))
+  plot(summary(x), ...)
 }
 
 #' Predict Methods for ensr objects
@@ -97,7 +101,7 @@ plot.ensr <- function(x, ...) {
 #' @name predict
 #' @export
 predict.ensr <- function(object, ...) {
- 
+
   pm <- preferable(object)
 
   cl <- as.list(match.call())
