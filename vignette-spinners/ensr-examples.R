@@ -14,8 +14,9 @@
 
 #+ label=setup, include = FALSE
 library(knitr)
-knitr::opts_chunk$set(collapse = TRUE)
+knitr::opts_chunk$set(collapse = TRUE, fig.width = 6, fig.height = 4)
 options(qwraps2_markup = "markdown")
+
 
 #'
 # /*
