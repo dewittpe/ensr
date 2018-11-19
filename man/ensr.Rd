@@ -6,8 +6,8 @@
 \alias{ensr-package}
 \title{Elastic Net SearcheR}
 \usage{
-ensr(y, x, alphas = seq(0, 1, length = 10), nlambda = 20L,
-  nfolds = 10L, foldid, ...)
+ensr(y, x, alphas = seq(0, 1, length = 10), nlambda = 100L,
+  standardize = TRUE, nfolds = 10L, foldid, ...)
 }
 \arguments{
 \item{y}{response \code{y} as in \code{glmnet}.}

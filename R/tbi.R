@@ -33,4 +33,6 @@
 #' \item{injury3}{Third of three specific types of TBI}
 #' }
 #'
+#' @seealso \code{vignette("ensr-datasets", package = "ensr")}
+#'
 "tbi"

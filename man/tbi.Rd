@@ -36,4 +36,7 @@ properties to a data set used for studying traumatic brain injuries.  The
 are indicators for procedure or billing codes associated with a hospital
 stay for TBI.
 }
+\seealso{
+\code{vignette("ensr-datasets", package = "ensr")}
+}
 \keyword{datasets}
