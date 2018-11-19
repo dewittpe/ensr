@@ -4,7 +4,9 @@
 #'author: "Peter E. DeWitt"
 #'date: "`r Sys.Date()`"
 #'output:
-#'  rmarkdown::html_vignette
+#'  rmarkdown::html_vignette:
+#'    toc: true
+#'    number_sections: true
 #'bibliography: references.bib
 #'vignette: >
 #'  %\VignetteEngine{knitr::rmarkdown}
@@ -40,6 +42,9 @@ options(datatable.print.topn  = 3L,
         datatable.print.nrows = 3L)
 
 #'
+# /*
+# --------------------- Section: Elastic Net Regression -----------------------
+# */
 #' # Elastic Net Regression
 #'
 #' Elastic Net Regression [@friedman2010regularization] is a penalized linear
@@ -76,7 +81,7 @@ options(datatable.print.topn  = 3L,
 #' Read the "Details" section in `help("cv.glmnet")`.
 #'
 # /*
-# -------------------------------- Data Sets ----------------------------------
+# ---------------------------- Section: Data Sets -----------------------------
 # */
 #' # Data Sets
 #'
@@ -98,10 +103,21 @@ data(tbi, package = "ensr")
 data(landfill, package = "ensr")
 
 # /*
-# ---------------------- Searching for lambda and alpha -----------------------
+# ----------------- Section: Searching for lambda and alpha -------------------
 # */
 #'
 #' # Searching for $\lambda$ and $\alpha$
+#'
+#' Searching for a preferable pair of $\lambda$ and $\alpha$ is subjective.
+#' Some defaults are provided but the user is encouraged to explore and consider
+#' other possible solutions.
+#'
+# /*
+# ----------------- Section: Searching for lambda and alpha -------------------
+# -------------- Subsection: Univariate Response            -------------------
+# */
+#'
+#' ## Univariate Response
 #'
 #' Searching for a combination of $\lambda$ and $\alpha$ resulting in the lowest
 #' cross validation error is done with a call to `ensr`.  The arguments to
@@ -237,10 +253,11 @@ qwraps2::qable(
 #'
 #'
 # /*
-# ------------------------- Cross-Validation Issues ---------------------------
+# ----------------- Section: Searching for lambda and alpha -------------------
+# -------------- Subsection: Cross Validation Issues       -------------------
 # */
 #'
-#' # Cross-Validation Issues:
+#' ## Cross Validation Issues
 #'
 #' The results above are subject to the foldid, as shown below:
 foldid1 <- sample(seq(10), size = nrow(x_matrix), replace = TRUE)
@@ -269,7 +286,113 @@ cbind(coef(ensr_obj_1), coef(ensr_obj_2), coef(ensr_obj_3))
 #' whereas foldid1 and foldid2 leads to only 14 non-zero coefficients.
 #'
 #' It is recommended multiple CV runs or bootstrapping is used to select a
-#' prefereable model.
+#' preferable model.
+#'
+#'
+# /*
+# ----------------- Section: Searching for lambda and alpha -------------------
+# -------------- Subsection: Multivariate Response          -------------------
+# */
+#'
+#' ## Multivariate Response
+#'
+#' The `landfill` data has multiple responses.  There are several options for
+#' working with a multivariate response.  We recommend using the default
+#' features of `glmnet`.  Using the `family = "mgaussian"` with
+#' `type.multinomial` set to either `"ungrouped`" (default) or `"grouped"`.
+#' Make sure to set `standardize.response` as needed.  The default is `FALSE`
+#' for `family = "mgaussian"`.  For this example we will use two response and
+#' a consistent `foldid`.
+#'
+#' **TODO:** This section is not ready...   grouped and ungrouped results are
+#' the same??? that doesn't make sense to me.
+#'
+#+ eval = FALSE
+y_matrix <- as.matrix(landfill[, c("wc_topsoil", "wc_clay", "wc_wlt", "wc_ult")])
+
+ensr_obj_one_at_a_time <-
+ lapply(lapply(1:4, function(i) y_matrix[, i]),
+        function(y) {
+          ensr(y = y,
+               x = x_matrix, 
+               standardize = FALSE,
+               standardize.response = FALSE,
+               foldid = foldid1,
+               family = "gaussian")
+               })
+
+ensr_obj_ungrpd <-
+  ensr(y = y_matrix,
+       x = x_matrix,
+       standardize = FALSE,
+       standardize.response = FALSE,
+       foldid = foldid1,
+       family = "mgaussian",
+       type.multinomial = "ungrouped")
+
+ensr_obj_grpd <-
+  ensr(y = y_matrix,
+       x = x_matrix,
+       standardize = FALSE,
+       standardize.response = FALSE,
+       foldid = foldid1,
+       family = "mgaussian",
+       type.multinomial = "grouped")
+
+#'
+#' The mean cross-validation error by $\lambda$ and $\alpha$ for the ungrouped
+#' and grouped objects are shown below.  Obviously, the preferable model, as
+#' defined by the minimum cross-validation error.
+#'
+#+ eval = FALSE 
+gridExtra::grid.arrange(plot(ensr_obj_ungrpd) + theme_bw() + ggtitle("Ungrouped"),
+                        plot(ensr_obj_grpd)   + theme_bw() + ggtitle("Grouped"),
+                        nrow = 1)
+
+#'
+#' The grouped object ensures that if a predictor variable has a non-zero
+#' coefficient for at least one response then that predictor will have a
+#' non-zero coefficient for all responses, even if that non-zero value is
+#' extremely small.
+#'
+#+ eval = FALSE
+s_ungrpd <- summary(ensr_obj_ungrpd)[cvm == min(cvm)]
+s_grpd   <- summary(ensr_obj_grpd)[cvm == min(cvm)]
+
+all.equal(s_ungrpd, s_grpd)  ## WHY IS THIS TRUE????  I really don't think it should be.
+# [1] TRUE
+
+lapply(lapply(ensr_obj_one_at_a_time, summary), function(x) {x[cvm == min(cvm)]})
+ 
+
+
+cbind(
+      do.call(cbind, coef(ensr_obj_ungrpd[[s_ungrpd$l_index]], s = s_ungrpd$lambda))
+      ,
+      do.call(cbind, coef(ensr_obj_grpd[[s_grpd$l_index]], s = s_grpd$lambda))
+      )
+
+two_summaries <-
+  rbindlist(
+            list(
+                 summary(ensr_obj_ungrpd)[, .SD[cvm == min(cvm)], by = nzero]
+                 ,
+                 summary(ensr_obj_grpd)[, .SD[cvm == min(cvm)], by = nzero]
+                 ),
+            idcol = "type.multinomial")[
+                                        ,
+                                        type.multinomial := factor(type.multinomial, 1:2, c("Ungrouped", "Grouped"))
+                                       ]
+
+ggplot(two_summaries) +
+  theme_bw() +
+  aes(x = nzero, y = cvm, color = type.multinomial) +
+  geom_point() +
+  geom_line()
+
+
+
+
 #'
 # /*
 # --------------------------- Session Information -----------------------------
