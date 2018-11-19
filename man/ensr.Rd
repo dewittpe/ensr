@@ -16,6 +16,14 @@ ensr(y, x, alphas = seq(0, 1, length = 10), nlambda = 100L,
 
 \item{alphas}{a sequence alpha values}
 
+\item{nlambda}{The number of \code{lambda} values - default is 100.}
+
+\item{standardize}{Logical flag for x variable standardization, prior to
+    fitting the model sequence. The coefficients are always returned on
+    the original scale. Default is \code{standardize=TRUE}.
+  If variables are in the same units already, you might not wish to
+  standardize. See details below for y standardization with \code{family="gaussian"}.}
+
 \item{nfolds}{number of folds - default is 10. Although \code{nfolds}
     can be as large as the sample size (leave-one-out CV), it is not
     recommended for large datasets. Smallest value allowable is \code{nfolds=3}}

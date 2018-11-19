@@ -3,6 +3,7 @@
 #' Search for the values of alpha and lambda.
 #'
 #' @inheritParams glmnet::cv.glmnet
+#' @inheritParams glmnet::glmnet
 #' @param alphas a sequence alpha values
 #'
 #' @export
@@ -38,7 +39,7 @@ ensr <- function(y, x, alphas = seq(0.00, 1.00, length = 10), nlambda = 100L, st
 #' @export
 print.ensr <- function(x, ...) {
   cat("A ensr object with", length(x), "cv.glmnet objects.\n")
-  str(x, max.level = 0L)
+  utils::str(x, max.level = 0L)
 }
 
 #' @export
@@ -82,7 +83,7 @@ plot.ensr_summary <- function(x, ...) {
 
 #' @export
 plot.ensr <- function(x, ...) {
-  plot(summary(x), ...)
+  graphics::plot(summary(x), ...)
 }
 
 #' Predict Methods for ensr objects
@@ -131,7 +132,7 @@ coef.ensr <- function(object, ...) {
 #' @param object an ensr object
 #' @param ... not currently used.
 #' @export
-preferable <- function(object, cve = "min", ...) {
+preferable <- function(object, ...) {
   UseMethod("preferable")
 }
 

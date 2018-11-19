@@ -18,10 +18,13 @@ Depends:
     R (>= 3.0.2),
     glmnet
 Imports:
-    data.table 
+    data.table,
+    ggplot2
 Suggests:
-    ggplot2,
+    digest,
+    ggforce, 
     knitr,
+    magrittr,
     microbenchmark,
     qwraps2
 RoxygenNote: 6.1.1

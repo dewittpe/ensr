@@ -4,7 +4,7 @@
 \alias{preferable}
 \title{Preferable Elastic Net Model}
 \usage{
-preferable(object, cve = "min", ...)
+preferable(object, ...)
 }
 \arguments{
 \item{object}{an ensr object}
