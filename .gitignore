@@ -2,3 +2,5 @@
 *.tar.gz
 *.Rcheck
 .Rproj.user
+
+\.Rhistory
