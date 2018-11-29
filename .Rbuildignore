@@ -1,3 +1,5 @@
 ^.+\.Rout$
 ^vignette-spinners
 ^data-raw
+^.*\.Rproj$
+^\.Rproj\.user$

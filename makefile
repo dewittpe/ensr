@@ -1,3 +1,9 @@
+ifeq ($(OS), Windows_NT)
+	RM ?= del
+else
+  RM ?= /bin/rm
+endif
+
 PKG_ROOT    = .
 PKG_VERSION = $(shell gawk '/^Version:/{print $$2}' $(PKG_ROOT)/DESCRIPTION)
 PKG_NAME    = $(shell gawk '/^Package:/{print $$2}' $(PKG_ROOT)/DESCRIPTION)
@@ -35,7 +41,7 @@ install: $(PKG_NAME)_$(PKG_VERSION).tar.gz
 	R CMD INSTALL $(PKG_NAME)_$(PKG_VERSION).tar.gz
 
 clean:
-	/bin/rm -f  $(PKG_NAME)_$(PKG_VERSION).tar.gz
-	/bin/rm -rf $(PKG_NAME).Rcheck
-	/bin/rm -f .document.Rout
+	$(RM) -f  $(PKG_NAME)_$(PKG_VERSION).tar.gz
+	$(RM) -rf $(PKG_NAME).Rcheck
+	$(RM) -f .document.Rout
 

@@ -26,7 +26,6 @@ library(data.table)
 library(magrittr)
 library(qwraps2)
 library(digest)
-library(ensr)
 set.seed(42)
 
 #'
@@ -173,11 +172,17 @@ tbi[, eval(injury_expression)]
 #' To prove that the `tbi` object constructed in this vignette is the same as
 #' the one provided in via calling `data(tbi, package = "ensr")` we show the
 #' sha1 for both data sets here:
+#/*
+if (!grepl("data-raw", getwd())) {
+#*/
 ensr_env <- new.env()
 data(tbi, package = "ensr", envir = ensr_env)
 
 all.equal(digest::sha1(tbi),
           digest::sha1(ensr_env$tbi))
+#/*
+}
+#*/
 
 #/*
 # This bit builds the documentation and the data set for the package.  It needs
@@ -240,8 +245,16 @@ usethis::use_data(tbi, overwrite = TRUE)
 #' percolation through five layers in a landfill over one year.  The raw data
 #' file is provided so the end user can explore their own preprocessing of the
 #' data sets.
+#/*
+if (grepl("data-raw", getwd())) {
+  landfill <-  fread(file = "../inst/extdata/landfill.csv", sep = ",") 
+} else {
+#*/ 
 landfill <-
   fread(file = system.file("extdata/landfill.csv", package = "ensr"), sep = ",")
+ #/*
+}
+#*/
 
 #'
 #' This landfill consists of five layers:
@@ -292,6 +305,11 @@ regex_names <- function(pattern) {
 #' | 100 year average Temperature       | `r regex_names("weather_temp")`     |                                                         |
 #'
 #' ## Landfill Data Preparation
+#/*
+if (grepl("data-raw", getwd())) {
+  source("../R/standardize.R") 
+}
+#*/
 #'
 #' The elastic net method suggests that the predictors are centered and scaled
 #' and in the case of multi-variable responses, that the outcomes are centered
@@ -368,10 +386,15 @@ str( landfill[, 1:2] )
 #'
 #' The `landfill` object that is generated in this vignette is the same as the
 #' one which you can call via `data(landfill, package = "ensr")`.
+#/*
+if (!grepl("data-raw", getwd())) {
+#*/
 data(landfill, package = "ensr", envir = ensr_env)
 all.equal(digest::sha1(landfill),
           digest::sha1(ensr_env$landfill))
-
+#/*
+}
+#*/
 
 #'
 #/*

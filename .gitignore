@@ -1,3 +1,4 @@
 *.Rout
 *.tar.gz
 *.Rcheck
+.Rproj.user
