@@ -21,7 +21,6 @@ options(qwraps2_markup = "markdown")
 ```
 
 
-
 The primary purpose of the ensr package is to provide methods for searching
 for preferable values of $\lambda$ and $\alpha$ in elastice net regression.
 This This vignette starts with a
@@ -277,7 +276,6 @@ The variables most important for modeling evaporation are `weather_temp`
 variables is considerably smaller than these four and thus not as important.
 
 
-
 ## Cross Validation Issues
 
 The results above are subject to the foldid, as shown below:
@@ -316,18 +314,110 @@ It is recommended multiple CV runs or bootstrapping is used to select a
 preferable model.
 
 
-
 ## Multivariate Response
 
-The `landfill` data has multiple responses.  There are several options for
-working with a multivariate response.  We recommend using the default
-features of `glmnet`.  Using the `family = "mgaussian"` with
-`type.multinomial` set to either `"ungrouped`" (default) or `"grouped"`.
-Make sure to set `standardize.response` as needed.  The default is `FALSE`
-for `family = "mgaussian"`.  For this example we will use two response and
-a consistent `foldid`.
 
-**TODO:** This section is not ready...
+There are three outcomes, injuries, in the `tbi` data set.  It would be
+reasonable to assume that there should be common variables with non-zero
+coefficients for models of each injury.  The end user could fit three
+univariate models, or, fit one multinomial model via the tools provided by
+`glmnet`.
+
+To illustrate these options we will run `ensr` five times: three univariate
+models, one multinomial model with `type.multinomial`
+
+```{r }
+ymat_1 <- matrix(tbi$injury1, ncol = 1)
+ymat_2 <- matrix(tbi$injury2, ncol = 1)
+ymat_3 <- matrix(tbi$injury3, ncol = 1)
+ymat_123 <- as.matrix(tbi[, c("injury1", "injury2", "injury3")], ncol = 3)
+xmat     <- as.matrix(tbi[, -c("injury1", "injury2", "injury3")])
+xmat[, "age"] <- standardize(xmat[, "age"])
+xmat[, "los"] <- standardize(xmat[, "los"])
+
+foldid <- sample(seq(10), size = nrow(ymat_1), replace = TRUE)
+
+fit_1 <- ensr(y = ymat_1, x = xmat,
+              standardize = FALSE, standardize.response = FALSE,
+              foldid = foldid, family = "binomial")
+fit_2 <- ensr(y = ymat_2, x = xmat,
+              standardize = FALSE, standardize.response = FALSE,
+              foldid = foldid, family = "binomial")
+fit_3 <- ensr(y = ymat_3, x = xmat,
+              standardize = FALSE, standardize.response = FALSE,
+              foldid = foldid, family = "binomial")
+fit_123_ungrouped <-
+  ensr(y = ymat_123, x = xmat,
+       standardize = FALSE, standardize.response = FALSE,
+       foldid = foldid,
+       family = "multinomial",
+       type.multinomial = "ungrouped")
+fit_123_grouped <-
+  ensr(y = ymat_123, x = xmat,
+       standardize = FALSE, standardize.response = FALSE,
+       foldid = foldid,
+       family = "multinomial",
+       type.multinomial = "grouped")
+```
+
+
+Let's look at the plots for these fits.  Looking for models that simply
+minimize cross-validation error suggests that for injury2 and injury3 an
+$\alpha$ of 1 would be preferable.   For injury1, a slightly lower $\alpha$
+is preferable.   When fitting the multinomial responses, grouped or
+ungrouped, it appears that preferable $\alpha$ is similar to the univariate
+fits.
+
+
+```{r fig.width = 8, fig.height = 8}
+gridExtra::grid.arrange(
+plot(fit_1) + ggplot2::ggtitle("Fit 1"),
+plot(fit_2) + ggplot2::ggtitle("Fit 2"),
+plot(fit_3) + ggplot2::ggtitle("Fit 3"),
+plot(fit_123_ungrouped) + ggplot2::ggtitle("Fit 123 Ungrouped"),
+plot(fit_123_grouped) + ggplot2::ggtitle("Fit 123 Grouped"),
+layout_matrix = rbind(c(1, 1, 2, 2, 3, 3),
+                      c(4, 4, 4, 5, 5, 5)))
+```
+
+
+The summary for these models
+
+```{r }
+all_summaries <-
+  rbindlist(list(summary(fit_1),
+                 summary(fit_2),
+                 summary(fit_3),
+                 summary(fit_123_ungrouped),
+                 summary(fit_123_grouped)),
+            idcol = "fit")
+```
+
+
+And the preferable models are:
+
+```{r }
+all_summaries[, .SD[cvm == min(cvm)], by = fit]
+```
+
+
+
+
+```{r }
+ggplot(
+       all_summaries[, .SD[cvm == min(cvm)], by = c("fit", "nzero")]
+       ) +
+  theme_bw() +
+  aes(x = nzero, y = cvm, color = factor(fit), linetype = factor(fit)) +
+  geom_point() +
+  geom_line() 
+
+all_summaries[, .SD[cvm == min(cvm) & ((fit == 4 & nzero == 9) | (fit == 5 & nzero == 14))], by = c("fit", "nzero")]
+```
+
+
+Lastly, similar work and can be done for multivariate Gaussian responses.
+See the documentation for `glmnet` for details.
 
 
 # Session Info

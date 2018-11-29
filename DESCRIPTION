@@ -23,6 +23,7 @@ Imports:
 Suggests:
     digest,
     ggforce, 
+    gridExtra,
     knitr,
     magrittr,
     microbenchmark,
