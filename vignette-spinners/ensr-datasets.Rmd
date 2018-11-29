@@ -30,8 +30,9 @@ library(data.table)
 library(magrittr)
 library(qwraps2)
 library(digest)
-library(ensr)
 set.seed(42)
+
+library(ensr)
 ```
 
 

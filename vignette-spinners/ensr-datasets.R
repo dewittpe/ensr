@@ -28,6 +28,17 @@ library(qwraps2)
 library(digest)
 set.seed(42)
 
+#/* Only load the ensr namespace if you are not running this script form the
+# data-raw directory
+if (grepl("data-raw", getwd())) {
+  source("../R/standardize.R") 
+} else {
+#*/
+library(ensr)
+#/*
+}
+#*/
+
 #'
 #/*
 # ------------------------- Traumatic Brain Injuries ---------------------------
@@ -305,11 +316,6 @@ regex_names <- function(pattern) {
 #' | 100 year average Temperature       | `r regex_names("weather_temp")`     |                                                         |
 #'
 #' ## Landfill Data Preparation
-#/*
-if (grepl("data-raw", getwd())) {
-  source("../R/standardize.R") 
-}
-#*/
 #'
 #' The elastic net method suggests that the predictors are centered and scaled
 #' and in the case of multi-variable responses, that the outcomes are centered
