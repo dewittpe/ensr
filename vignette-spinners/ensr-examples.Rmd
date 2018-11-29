@@ -37,6 +37,9 @@ library(ggplot2)
 library(ggforce)
 options(datatable.print.topn  = 3L,
         datatable.print.nrows = 3L)
+
+library(doMC)
+registerDoMC(cores = parallel::detectCores())
 ```
 
 
@@ -324,40 +327,48 @@ univariate models, or, fit one multinomial model via the tools provided by
 `glmnet`.
 
 To illustrate these options we will run `ensr` five times: three univariate
-models, one multinomial model with `type.multinomial`
+models, one multinomial model with `type.multinomial` set to the default
+"ungrouped," and one additiona multinomial model with the `:
 
 ```{r }
 ymat_1 <- matrix(tbi$injury1, ncol = 1)
 ymat_2 <- matrix(tbi$injury2, ncol = 1)
 ymat_3 <- matrix(tbi$injury3, ncol = 1)
 ymat_123 <- as.matrix(tbi[, c("injury1", "injury2", "injury3")], ncol = 3)
-xmat     <- as.matrix(tbi[, -c("injury1", "injury2", "injury3")])
-xmat[, "age"] <- standardize(xmat[, "age"])
-xmat[, "los"] <- standardize(xmat[, "los"])
+xmat     <- as.matrix(tbi[, -c("age", "los", "injury1", "injury2", "injury3")])
 
 foldid <- sample(seq(10), size = nrow(ymat_1), replace = TRUE)
 
 fit_1 <- ensr(y = ymat_1, x = xmat,
               standardize = FALSE, standardize.response = FALSE,
-              foldid = foldid, family = "binomial")
+              foldid = foldid, family = "binomial",
+              parallel = TRUE)
+
 fit_2 <- ensr(y = ymat_2, x = xmat,
               standardize = FALSE, standardize.response = FALSE,
-              foldid = foldid, family = "binomial")
+              foldid = foldid, family = "binomial",
+              parallel = TRUE)
+
 fit_3 <- ensr(y = ymat_3, x = xmat,
               standardize = FALSE, standardize.response = FALSE,
-              foldid = foldid, family = "binomial")
+              foldid = foldid, family = "binomial",
+              parallel = TRUE)
+
 fit_123_ungrouped <-
   ensr(y = ymat_123, x = xmat,
        standardize = FALSE, standardize.response = FALSE,
        foldid = foldid,
        family = "multinomial",
-       type.multinomial = "ungrouped")
+       type.multinomial = "ungrouped",
+       parallel = TRUE)
+
 fit_123_grouped <-
   ensr(y = ymat_123, x = xmat,
        standardize = FALSE, standardize.response = FALSE,
        foldid = foldid,
        family = "multinomial",
-       type.multinomial = "grouped")
+       type.multinomial = "grouped",
+       parallel = TRUE)
 ```
 
 
@@ -391,10 +402,13 @@ all_summaries <-
                  summary(fit_123_ungrouped),
                  summary(fit_123_grouped)),
             idcol = "fit")
+
+all_summaries[, fit := factor(fit, 1:5, c("Fit 1", "Fit 2", "Fit 3", "Fit 123 Ungrouped", "Fit 123 Grouped"))]
 ```
 
 
-And the preferable models are:
+And the preferable models, determined by minimizing the mean cross validation
+error are:
 
 ```{r }
 all_summaries[, .SD[cvm == min(cvm)], by = fit]
@@ -410,9 +424,53 @@ ggplot(
   theme_bw() +
   aes(x = nzero, y = cvm, color = factor(fit), linetype = factor(fit)) +
   geom_point() +
-  geom_line() 
+  geom_line()
+```
 
-all_summaries[, .SD[cvm == min(cvm) & ((fit == 4 & nzero == 9) | (fit == 5 & nzero == 14))], by = c("fit", "nzero")]
+
+From the looks of the graphic the multinomial fits with either 9 non-zero
+coefficients for the ungrouped model, or 14 non-zero coefficients for the
+grouped model, are preferable.
+
+For **a** comparison of the results let's look at the models with the lowest
+mean cross validation error and eight non-zero coefficients.
+
+```{r }
+pref_models <-
+  all_summaries[nzero == 8,
+                .SD[cvm == min(cvm)],
+                by = c("fit")]
+pref_models
+```
+
+
+Let's look at the coefficients for the models, starting with the three
+univariate models
+
+```{r }
+cbind(
+      coef(fit_1[[pref_models$l_index[1]]], s = pref_models$lambda[1])
+      ,
+      coef(fit_2[[pref_models$l_index[2]]], s = pref_models$lambda[2])
+      ,
+      coef(fit_3[[pref_models$l_index[3]]], s = pref_models$lambda[3])
+      )
+```
+
+
+The following are the non-zero coefficients for the ungrouped models.
+
+```{r }
+do.call(cbind,
+        coef(fit_123_ungrouped[[pref_models$l_index[4]]], s = pref_models$lambda[4]))
+```
+
+
+The grouped results are:
+
+```{r }
+do.call(cbind,
+        coef(fit_123_grouped[[pref_models$l_index[5]]], s = pref_models$lambda[5]))
 ```
 
 
