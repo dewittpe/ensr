@@ -19,11 +19,6 @@ library(knitr)
 knitr::opts_chunk$set(collapse = TRUE, fig.width = 6, fig.height = 4)
 options(qwraps2_markup = "markdown")
 
-
-#'
-# /*
-# -----------------------------------------------------------------------------
-# */
 #'
 #' The primary purpose of the ensr package is to provide methods for searching
 #' for preferable values of $\lambda$ and $\alpha$ in elastice net regression.
@@ -43,7 +38,7 @@ options(datatable.print.topn  = 3L,
 
 #'
 # /*
-# --------------------- Section: Elastic Net Regression -----------------------
+# {{{ ----------------- Section: Elastic Net Regression -----------------------
 # */
 #' # Elastic Net Regression
 #'
@@ -81,7 +76,10 @@ options(datatable.print.topn  = 3L,
 #' Read the "Details" section in `help("cv.glmnet")`.
 #'
 # /*
-# ---------------------------- Section: Data Sets -----------------------------
+# --------------------------------------------------------------------------}}}
+# */
+# /*
+# {{{ ------------------------ Section: Data Sets -----------------------------
 # */
 #' # Data Sets
 #'
@@ -103,7 +101,10 @@ data(tbi, package = "ensr")
 data(landfill, package = "ensr")
 
 # /*
-# ----------------- Section: Searching for lambda and alpha -------------------
+# --------------------------------------------------------------------------}}}
+# */
+# /*
+# {{{ ------------- Section: Searching for lambda and alpha -------------------
 # */
 #'
 #' # Searching for $\lambda$ and $\alpha$
@@ -113,8 +114,7 @@ data(landfill, package = "ensr")
 #' other possible solutions.
 #'
 # /*
-# ----------------- Section: Searching for lambda and alpha -------------------
-# -------------- Subsection: Univariate Response            -------------------
+# {{{ ----------------- Subsection: Univariate Response ------------------------
 # */
 #'
 #' ## Univariate Response
@@ -251,10 +251,11 @@ qwraps2::qable(
 #' `rh` (relative humidity).  The magnitude of the fifth and lower ranked
 #' variables is considerably smaller than these four and thus not as important.
 #'
-#'
+#/*
+# End of Univariate Response ----------------------------------------------- }}}
+#*/
 # /*
-# ----------------- Section: Searching for lambda and alpha -------------------
-# -------------- Subsection: Cross Validation Issues       -------------------
+# {{{ --------------- Subsection: Cross Validation Issues ----------------------
 # */
 #'
 #' ## Cross Validation Issues
@@ -288,10 +289,12 @@ cbind(coef(ensr_obj_1), coef(ensr_obj_2), coef(ensr_obj_3))
 #' It is recommended multiple CV runs or bootstrapping is used to select a
 #' preferable model.
 #'
+#/*
+# End of Cross Validation Issues ------------------------------------------- }}}
+#*/
 #'
 # /*
-# ----------------- Section: Searching for lambda and alpha -------------------
-# -------------- Subsection: Multivariate Response          -------------------
+# {{{ ---------------- Subsection: Multivariate Response -----------------------
 # */
 #'
 #' ## Multivariate Response
@@ -306,6 +309,13 @@ cbind(coef(ensr_obj_1), coef(ensr_obj_2), coef(ensr_obj_3))
 #'
 #' **TODO:** This section is not ready...
 #'
+# /*
+# End of Multivariate Response ---------------------------------------------}}}
+# */
+# /*
+# End of Searching for lambda and alpha-------------------------------------}}}
+# */
+
 # /*
 # --------------------------- Session Information -----------------------------
 # */
