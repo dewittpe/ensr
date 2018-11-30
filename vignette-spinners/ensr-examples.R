@@ -77,8 +77,9 @@ registerDoMC(cores = parallel::detectCores())
 #' nets. However, the current implementation of `cv.glmnet` requires that the value(s) 
 #' of $\alpha$ be specified by the user (see "Details" in `help("cv.glmnet")`). 
 #' We designed the `ensr` package to fill this gap by simultaneously searching for a 
-#' preferable set of $\lambda$ and $\alpha$ values. 
-#'
+#' preferable set of $\lambda$ and $\alpha$ values. `ensr` also provides additional
+#' plotting methods to facilitate visual identification of the best choice for a given project.
+#' 
 # /*
 # --------------------------------------------------------------------------}}}
 # */
@@ -127,10 +128,10 @@ data(landfill, package = "ensr")
 #'
 #' Searching for a combination of $\lambda$ and $\alpha$ resulting in the lowest
 #' cross validation error is done with a call to `ensr`.  The arguments to
-#' `ensr` are the same as those made to `cv.glment` with the addition of
+#' `ensr` are the same as those made to `cv.glmnet` with the addition of
 #' `alphas`, a sequence of $\alpha$ values to use.  Please note that `ensr` will
-#' add `length(alphas) - 1` additional values, the midpoint between the given
-#' set, in the construciton of a $\lambda$--$\alpha$ grid to search.  For the
+#' add `length(alphas) - 1` additional values, the midpoints between the given
+#' set, in the construction of a $\lambda$--$\alpha$ grid to search.  For the
 #' initial example we will fit an elastic net for modeling the evaporation in
 #' the landfill data constructed above.
 set.seed(42)
@@ -141,19 +142,19 @@ ensr_obj <- ensr(y = y_matrix, x = x_matrix, standardize = FALSE)
 ensr_obj
 
 #'
-#' The `ensr_obj` is a `ensr` object which is a list of `cv.glment` objects.
+#' `ensr_obj` is a `ensr` object which is a list of `cv.glmnet` objects.
 #' The length of the list is determined by the length of the $\alphas$ argument.
 #' The default for `alphas` is `r deparse(as.list(args(ensr))$alphas)`.
 #'
-#' The summary method for `ensr` objects returns and `data.table` with value of
+#' The summary method for `ensr` objects returns a `data.table` with values of
 #' $\lambda$, $\alpha$, the mean cross-validation error `cvm`, and the number of
-#' non-zero coefficients.  The `l_index` the the list index of the `ensr` object
+#' non-zero coefficients.  The `l_index` is the list index of the `ensr` object
 #' associated with the noted $\alpha$ value.
 ensr_obj_summary <- summary(object = ensr_obj)
 ensr_obj_summary
 
 #'
-#' The preferable model is the one with the minimum cross-validation error.
+#' The preferable model may be the one with the minimum cross-validation error.
 ensr_obj_summary[cvm == min(cvm)]
 
 #'
@@ -164,7 +165,7 @@ str( preferable(ensr_obj), max.level = 1L)
 #' The return is a `elnet` `glmnet` object with one additional list element, the
 #' `ensr_summary` used to select this preferable model.
 #'
-#' Since the return of `preferable` inherits the same class as a object
+#' Since the return of `preferable` inherits the same class as an object
 #' returned from a call to `glmnet::glmnet` the same methods can be used, for
 #' example, plotting
 par(mfrow = c(1, 3))
@@ -174,18 +175,18 @@ plot(preferable(ensr_obj), xvar = "dev")
 
 #'
 #' Another graphical way to look at the results of the `ensr` is to use the
-#' provided plotting method.  In the plot below each of the $\lambda$ (y-axis,
+#' `ensr`-provided plotting method.  In the plot below, each of the $\lambda$ (y-axis,
 #' $\log_{10}$ scale) and $\alpha$ (x-axis) values considered in the `ensr_obj`
 #' are plotted.  The coloring is denoted as `log10(z)` where `z = (cvm -
 #' min(cvm)) / sd(cvm)`.   The color scale is set to have low values, values
 #' near the minimum mean cross validation error, to be dark green, values moving
-#' further from the min are lighter green, moving to white then purple.
+#' further from the minimum are lighter green, moving to white then purple.
 plot(ensr_obj) +
   theme_bw() +
   facet_zoom(x = 0.50 < alpha & alpha < 0.90, y = 5e-4 < lambda & lambda < 1.5e-3)
 
 #'
-#' In this graphic we see the minimum mean cross validation error occurs within
+#' In this figure we see the minimum mean cross validation error occurs within
 #' the models with $\alpha$ = `r summary(ensr_obj)[cvm == min(cvm), "alpha"]`.
 summary(ensr_obj)[cvm == min(cvm)]
 
@@ -200,9 +201,9 @@ summary(ensr_obj)[, .SD[cvm == min(cvm)], by = alpha][l_index %in% c(13, 16)]
 #' number of non-zero (`nzero`) coefficients are different.  With a very small
 #' increase in the mean cross validation error, one more variable has its
 #' regression coefficient shrunk to zero.  If parsimony is your primary
-#' objective the second model might be your preferable model.
+#' objective, the second model might be your preferable model.
 #'
-#' We can look at the mean cross validation errors by nzero too.
+#' We can also look at the mean cross validation errors by `nzero`.
 summary(ensr_obj)[, .SD[cvm == min(cvm)], by = nzero]
 
 ggplot(summary(ensr_obj)[, .SD[cvm == min(cvm)], by = nzero]) +
@@ -213,23 +214,23 @@ ggplot(summary(ensr_obj)[, .SD[cvm == min(cvm)], by = nzero]) +
   facet_zoom(xy = cvm < 0.05)
 
 #'
-#' Based on the graphic above, if the objective is lowest cross validation error
-#' and parsimony, you could argue that the model with 14 non-zero coefficients
-#' is the preferable model as the is very little to gain, in terms of reducing
-#' the mean cross validation error, by using a model with fifteen or more
-#' non-zero coefficients.  But then again, that argument could be made about the
-#' model with only five non-zero coefficients.
+#' Based on the figure above, if the objective is lowest cross validation error
+#' and parsimony, the model with 14 non-zero coefficients
+#' may be the preferable model. The additional non-zero coefficient in the model
+#' with 15 coefficients does not meaningfully reduce
+#' the mean cross validation error. Further examination shows that the model with
+#' only five non-zero coefficients might also be a reasonable choice.
 summary(ensr_obj)[nzero %in% c(5, 15)] [, .SD[cvm == min(cvm)], by = nzero]
 
 #'
-#' To get the set of coefficients associated with the above:
+#' To obtain the coefficients from the above models:
 landfill_evap_coef5  <- coef(ensr_obj[[19]], s = 0.0020028865)
 landfill_evap_coef15 <- coef(ensr_obj[[16]], s = 0.0007266755)
 
 #'
-#' The table below lists the variables for each model in descending order of the
-#' absolute value of the regression coefficients.  Since the predictors had been
-#' standardized the relative magnitude of the coefficients can server has a
+#' The table below shows the variables for each model in descending order of the
+#' absolute value of the regression coefficients.  Because the predictors were
+#' standardized, the relative magnitude of the coefficients can serve as a
 #' sensitivity/influence/importance metric.
 qwraps2::qable(
                data.table(
@@ -254,8 +255,8 @@ qwraps2::qable(
 #' The variables most important for modeling evaporation are `weather_temp`
 #' (average temperature over the last 100 years),
 #' `wind` (average wind speed), `weather_solrad` (average solar radiation), and
-#' `rh` (relative humidity).  The magnitude of the fifth and lower ranked
-#' variables is considerably smaller than these four and thus not as important.
+#' `rh` (relative humidity).  The fifth and higher coefficients are considerably 
+#' smaller and less important than the first four.
 #'
 #/*
 # End of Univariate Response ----------------------------------------------- }}}
@@ -266,7 +267,7 @@ qwraps2::qable(
 #'
 #' ## Cross Validation Issues
 #'
-#' The results above are subject to the foldid, as shown below:
+#' The results above are subject to the `foldid`, as shown below:
 foldid1 <- sample(seq(10), size = nrow(x_matrix), replace = TRUE)
 foldid2 <- sample(seq(10), size = nrow(x_matrix), replace = TRUE)
 foldid3 <- sample(seq(10), size = nrow(x_matrix), replace = TRUE)
@@ -313,7 +314,7 @@ cbind(coef(ensr_obj_1), coef(ensr_obj_2), coef(ensr_obj_3))
 #'
 #' To illustrate these options we will run `ensr` five times: three univariate
 #' models, one multinomial model with `type.multinomial` set to the default
-#' "ungrouped," and one additiona multinomial model with the `:
+#' "ungrouped," and one additional multinomial model with the `:
 ymat_1 <- matrix(tbi$injury1, ncol = 1)
 ymat_2 <- matrix(tbi$injury2, ncol = 1)
 ymat_3 <- matrix(tbi$injury3, ncol = 1)
