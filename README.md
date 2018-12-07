@@ -1,6 +1,9 @@
 ensr: Elastic Net SearcheR <img src="hexsticker/ensr.png" width=173 height=200 align="right"/>
 ===============================================================================
 
+[![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/ensr)](https://cran.r-project.org/package=ensr)
+[![Build Status](https://travis-ci.com/dewittpe/ensr.svg?branch=master)](https://travis-ci.com/dewittpe/ensr)
+
 Elastic Net regression models combine both the L1 and L2 penalties of lasso and
 ridge regression.  There are two penalty terms, lambda and alpha.  Lambda is a
 complexity parameter and alpha is a balance between lasso and ridge.

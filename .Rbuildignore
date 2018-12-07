@@ -5,3 +5,6 @@
 ^\.Rproj\.user$
 ^hexstickers
 ^CONTRIBUTING.md$
+^\.travis\.yml$
+^.*makefile$
+^.*\.tar\.gz$
