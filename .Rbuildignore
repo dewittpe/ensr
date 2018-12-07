@@ -4,3 +4,4 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^hexstickers
+^CONTRIBUTING.md$
