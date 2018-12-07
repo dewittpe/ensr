@@ -35,10 +35,6 @@ library(ggforce)
 options(datatable.print.topn  = 3L,
         datatable.print.nrows = 3L)
 
-library(doMC)
-registerDoMC(cores = parallel::detectCores())
-
-
 #'
 # /*
 # {{{ ----------------- Section: Elastic Net Regression -----------------------

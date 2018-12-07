@@ -22,7 +22,6 @@ Imports:
     ggplot2
 Suggests:
     digest,
-    doMC,
     ggforce, 
     gridExtra,
     knitr,
