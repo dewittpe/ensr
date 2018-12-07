@@ -21,5 +21,5 @@ branches:
   only:
     - master
 
-after_success:
-  - travis_wait 30 Rscript -e 'covr::codecov(type = "all", commentDontrun = FALSE, commentDonttest = FALSE)'
+# after_success:
+#   - travis_wait 30 Rscript -e 'covr::codecov(type = "all", commentDontrun = FALSE, commentDonttest = FALSE)'
