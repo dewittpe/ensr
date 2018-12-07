@@ -2,7 +2,6 @@
 *.tar.gz
 *.Rcheck
 .Rproj.user
-
 ensr\.Rproj
-
 \.Rhistory
+
