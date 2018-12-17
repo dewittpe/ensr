@@ -14,11 +14,11 @@ vignette: >
  %\VignetteEncoding{UTF-8}
 ---
 
-```{r label=setup, include = FALSE}
+````{r label=setup, include = FALSE}
 library(knitr)
 knitr::opts_chunk$set(collapse = TRUE, fig.width = 6, fig.height = 4)
 options(qwraps2_markup = "markdown")
-```
+````
 
 
 The primary purpose of the ensr package is to provide methods for simultaneously searching
@@ -29,14 +29,14 @@ Examples of data set preparation follow and the vignette concludes with elastic 
 results.
 
 
-```{r label="load_and_attach_ensr"}
+````{r label="load_and_attach_ensr"}
 library(ensr)
 library(data.table)
 library(ggplot2)
 library(ggforce)
 options(datatable.print.topn  = 3L,
         datatable.print.nrows = 3L)
-```
+````
 
 
 # Elastic Net Regression
@@ -93,10 +93,10 @@ provided in the "ensr-datasets" vignette:
 vignette("ensr-datasets", package = "ensr")
 ```
 
-```{r }
+````{r }
 data(tbi, package = "ensr")
 data(landfill, package = "ensr")
-```
+````
 
 
 # Searching for $\lambda$ and $\alpha$
@@ -119,14 +119,14 @@ set, in the construction of a $\lambda$--$\alpha$ grid to search.  For the
 initial example we will fit an elastic net for modeling the evaporation in
 the landfill data constructed above.
 
-```{r }
+````{r }
 set.seed(42)
 y_matrix <- as.matrix(landfill$evap)
 x_matrix <- as.matrix(landfill[, topsoil_porosity:weather_temp])
 
 ensr_obj <- ensr(y = y_matrix, x = x_matrix, standardize = FALSE)
 ensr_obj
-```
+````
 
 
 `ensr_obj` is a `ensr` object which is a list of `cv.glmnet` objects.
@@ -138,24 +138,24 @@ $\lambda$, $\alpha$, the mean cross-validation error `cvm`, and the number of
 non-zero coefficients.  The `l_index` is the list index of the `ensr` object
 associated with the noted $\alpha$ value.
 
-```{r }
+````{r }
 ensr_obj_summary <- summary(object = ensr_obj)
 ensr_obj_summary
-```
+````
 
 
 The preferable model may be the one with the minimum cross-validation error.
 
-```{r }
+````{r }
 ensr_obj_summary[cvm == min(cvm)]
-```
+````
 
 
 A quick way to get the preferable model is to call the `preferable` method.
 
-```{r }
+````{r }
 str( preferable(ensr_obj), max.level = 1L)
-```
+````
 
 
 The return is a `elnet` `glmnet` object with one additional list element, the
@@ -165,12 +165,12 @@ Since the return of `preferable` inherits the same class as an object
 returned from a call to `glmnet::glmnet` the same methods can be used, for
 example, plotting
 
-```{r }
+````{r }
 par(mfrow = c(1, 3))
 plot(preferable(ensr_obj), xvar = "norm")
 plot(preferable(ensr_obj), xvar = "lambda")
 plot(preferable(ensr_obj), xvar = "dev")
-```
+````
 
 
 Another graphical way to look at the results of the `ensr` is to use the
@@ -181,27 +181,27 @@ min(cvm)) / sd(cvm)`.   The color scale is set to have low values, values
 near the minimum mean cross validation error, to be dark green, values moving
 further from the minimum are lighter green, moving to white then purple.
 
-```{r }
+````{r }
 plot(ensr_obj) +
   theme_bw() +
   facet_zoom(x = 0.50 < alpha & alpha < 0.90, y = 5e-4 < lambda & lambda < 1.5e-3)
-```
+````
 
 
 In this figure we see the minimum mean cross validation error occurs within
 the models with $\alpha$ = `r summary(ensr_obj)[cvm == min(cvm), "alpha"]`.
 
-```{r }
+````{r }
 summary(ensr_obj)[cvm == min(cvm)]
-```
+````
 
 
 Inspection of the plot suggest there is another minimum worth looking at, for
 $\alpha$ = `r summary(ensr_obj)[l_index == 16][cvm == min(cvm), "alpha"]`.
 
-```{r }
+````{r }
 summary(ensr_obj)[, .SD[cvm == min(cvm)], by = alpha][l_index %in% c(13, 16)]
-```
+````
 
 
 The difference in the mean cross validation error between these two results
@@ -213,7 +213,7 @@ objective, the second model might be your preferable model.
 
 We can also look at the mean cross validation errors by `nzero`.
 
-```{r }
+````{r }
 summary(ensr_obj)[, .SD[cvm == min(cvm)], by = nzero]
 
 ggplot(summary(ensr_obj)[, .SD[cvm == min(cvm)], by = nzero]) +
@@ -222,7 +222,7 @@ ggplot(summary(ensr_obj)[, .SD[cvm == min(cvm)], by = nzero]) +
   geom_point() +
   geom_line() +
   facet_zoom(xy = cvm < 0.05)
-```
+````
 
 
 Based on the figure above, if the objective is lowest cross validation error
@@ -232,17 +232,17 @@ with 15 coefficients does not meaningfully reduce
 the mean cross validation error. Further examination shows that the model with
 only five non-zero coefficients might also be a reasonable choice.
 
-```{r }
+````{r }
 summary(ensr_obj)[nzero %in% c(5, 15)] [, .SD[cvm == min(cvm)], by = nzero]
-```
+````
 
 
 To obtain the coefficients from the above models:
 
-```{r }
+````{r }
 landfill_evap_coef5  <- coef(ensr_obj[[19]], s = 0.0020028865)
 landfill_evap_coef15 <- coef(ensr_obj[[16]], s = 0.0007266755)
-```
+````
 
 
 The table below shows the variables for each model in descending order of the
@@ -250,7 +250,7 @@ absolute value of the regression coefficients.  Because the predictors were
 standardized, the relative magnitude of the coefficients can serve as a
 sensitivity/influence/importance metric.
 
-```{r }
+````{r }
 qwraps2::qable(
                data.table(
                           variable = c(rownames(landfill_evap_coef5),
@@ -269,7 +269,7 @@ qwraps2::qable(
                ,
                rgroup = c("nzero = 5" = 5, "nzero = 15"= 15),
                rnames = c(1:5, 1:15))
-```
+````
 
 
 The variables most important for modeling evaporation are `weather_temp`
@@ -283,7 +283,7 @@ smaller and less important than the first four.
 
 The results above are subject to the `foldid`, as shown below:
 
-```{r }
+````{r }
 foldid1 <- sample(seq(10), size = nrow(x_matrix), replace = TRUE)
 foldid2 <- sample(seq(10), size = nrow(x_matrix), replace = TRUE)
 foldid3 <- sample(seq(10), size = nrow(x_matrix), replace = TRUE)
@@ -295,7 +295,7 @@ ensr_obj_3 <- ensr(y = y_matrix, x = x_matrix, standardize = FALSE, foldid = fol
 summary(ensr_obj_1)[cvm == min(cvm)]
 summary(ensr_obj_2)[cvm == min(cvm)]
 summary(ensr_obj_3)[cvm == min(cvm)]
-```
+````
 
 
 There are small differences in the cross validation errors and the in the
@@ -304,9 +304,9 @@ is notable, that the differences in the regression coefficients is minor.
 In this case there are the same number of non-zero coefficients and the
 magnitudes are similar.
 
-```{r }
+````{r }
 cbind(coef(ensr_obj_1), coef(ensr_obj_2), coef(ensr_obj_3))
-```
+````
 
 
 One could argue there is a major difference in the result between the two
@@ -330,7 +330,7 @@ To illustrate these options we will run `ensr` five times: three univariate
 models, one multinomial model with `type.multinomial` set to the default
 "ungrouped," and one additional multinomial model with the `:
 
-```{r }
+````{r }
 ymat_1 <- matrix(tbi$injury1, ncol = 1)
 ymat_2 <- matrix(tbi$injury2, ncol = 1)
 ymat_3 <- matrix(tbi$injury3, ncol = 1)
@@ -369,7 +369,7 @@ fit_123_grouped <-
        family = "multinomial",
        type.multinomial = "grouped",
        parallel = TRUE)
-```
+````
 
 
 Let's look at the plots for these fits.  Looking for models that simply
@@ -380,7 +380,7 @@ ungrouped, it appears that preferable $\alpha$ is similar to the univariate
 fits.
 
 
-```{r fig.width = 8, fig.height = 8}
+````{r fig.width = 8, fig.height = 8}
 gridExtra::grid.arrange(
 plot(fit_1) + ggplot2::ggtitle("Fit 1"),
 plot(fit_2) + ggplot2::ggtitle("Fit 2"),
@@ -389,12 +389,12 @@ plot(fit_123_ungrouped) + ggplot2::ggtitle("Fit 123 Ungrouped"),
 plot(fit_123_grouped) + ggplot2::ggtitle("Fit 123 Grouped"),
 layout_matrix = rbind(c(1, 1, 2, 2, 3, 3),
                       c(4, 4, 4, 5, 5, 5)))
-```
+````
 
 
 The summary for these models
 
-```{r }
+````{r }
 all_summaries <-
   rbindlist(list(summary(fit_1),
                  summary(fit_2),
@@ -404,20 +404,20 @@ all_summaries <-
             idcol = "fit")
 
 all_summaries[, fit := factor(fit, 1:5, c("Fit 1", "Fit 2", "Fit 3", "Fit 123 Ungrouped", "Fit 123 Grouped"))]
-```
+````
 
 
 And the preferable models, determined by minimizing the mean cross validation
 error are:
 
-```{r }
+````{r }
 all_summaries[, .SD[cvm == min(cvm)], by = fit]
-```
+````
 
 
 
 
-```{r }
+````{r }
 ggplot(
        all_summaries[, .SD[cvm == min(cvm)], by = c("fit", "nzero")]
        ) +
@@ -425,7 +425,7 @@ ggplot(
   aes(x = nzero, y = cvm, color = factor(fit), linetype = factor(fit)) +
   geom_point() +
   geom_line()
-```
+````
 
 
 From the looks of the graphic the multinomial fits with either 9 non-zero
@@ -435,19 +435,19 @@ grouped model, are preferable.
 For **a** comparison of the results let's look at the models with the lowest
 mean cross validation error and eight non-zero coefficients.
 
-```{r }
+````{r }
 pref_models <-
   all_summaries[nzero == 8,
                 .SD[cvm == min(cvm)],
                 by = c("fit")]
 pref_models
-```
+````
 
 
 Let's look at the coefficients for the models, starting with the three
 univariate models
 
-```{r }
+````{r }
 cbind(
       coef(fit_1[[pref_models$l_index[1]]], s = pref_models$lambda[1])
       ,
@@ -455,35 +455,72 @@ cbind(
       ,
       coef(fit_3[[pref_models$l_index[3]]], s = pref_models$lambda[3])
       )
-```
+````
 
 
 The following are the non-zero coefficients for the ungrouped models.
 
-```{r }
+````{r }
 do.call(cbind,
         coef(fit_123_ungrouped[[pref_models$l_index[4]]], s = pref_models$lambda[4]))
-```
+````
 
 
 The grouped results are:
 
-```{r }
+````{r }
 do.call(cbind,
         coef(fit_123_grouped[[pref_models$l_index[5]]], s = pref_models$lambda[5]))
-```
+````
 
 
 Lastly, similar work and can be done for multivariate Gaussian responses.
 See the documentation for `glmnet` for details.
 
+# Alternative Approaches
+
+Our ensr package is not the only approach to searching for $\labmda$ and
+$\alpha$. The
+[`glmnetUtils`](https://cran.r-progject.org/package=glmnetUtils)
+[@glmnetUtils] is the most notable comparative package.  We encourage the
+reader to explore the glmnetUtils package and determine if it meets your
+needs as well, or better than the ensr package.
+
+There are two major differences in the implementation of ensr and
+glmnetUtils.  The first major difference is that
+glmnetUtils allows users to specify glmnet models with a
+formula, e.g., `y ~ x1 + x2 + x3`, whereas ensr maintains the glmnet
+requirement of the user providing y and x matrices.  We opted for the
+simplicity of saying with glmnet arguments for programming efficiency and as
+a check on reasonable models.  It is likely that a model with a factor on the
+right-hand side of the formula should not be evaluated with elastic net.
+There does not appear to be a check or warning in glmnetUtils for factor, or
+character (which will be coerced to a factor) variables on the right-hand
+side of the formula statement.  ensr and glmnet, by requiring the user to
+specify the response and support matrices forces the user to be aware of, and
+explicitly handle possible character/factor predictor variables.  (Binary
+factors and non-trivial in this context as well, but are considerably less
+difficult to deal with then factors with three or more possible values.)
+
+The second major difference between ensr and glmnetUtils is the
+$\lambda$-$\alpha$ grid, or lack-thereof, used in the search.  ensr builds a
+grid and evaluates `cv.glmnet` at least twice for each value of $\lambda.$
+That is, for each value of $\lambda$ there are at least two values of
+$\alpha$ which will be considered.  glmnetUtils only uses the default
+$\labmda$ values for each specific $\alpha$ value.  By constructing a
+$\labmda$-$\alpha$ grid, ensr provides minimally sufficient support for
+estimating a contour plot for a (x = $\alpha,$ y = $\lambda,$ z =
+cross-validation mean error) surface.  The glmnetUtils results require
+imputation before such a surface could be estimated.  We opine the selection
+of a $\labmda$-$\alpha$ pair should be based on a grid search.
+
 
 # Session Info
 
 
-```{r }
+````{r }
 print(sessionInfo(), local = FALSE)
-```
+````
 
 
 # References

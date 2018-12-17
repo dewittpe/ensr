@@ -440,6 +440,50 @@ do.call(cbind,
 # End of Searching for lambda and alpha--------------------------------------}}}
 # */
 
+#/*
+# {{{ An alternative approach --------------------------------------------------
+#*/
+#' # Alternative Approaches
+#'
+#' Our ensr package is not the only approach to searching for $\labmda$ and
+#' $\alpha$. The
+#' [`glmnetUtils`](https://cran.r-progject.org/package=glmnetUtils)
+#' [@glmnetUtils] is the most notable comparative package.  We encourage the
+#' reader to explore the glmnetUtils package and determine if it meets your
+#' needs as well, or better than the ensr package.
+#'
+#' There are two major differences in the implementation of ensr and
+#' glmnetUtils.  The first major difference is that
+#' glmnetUtils allows users to specify glmnet models with a
+#' formula, e.g., `y ~ x1 + x2 + x3`, whereas ensr maintains the glmnet
+#' requirement of the user providing y and x matrices.  We opted for the
+#' simplicity of saying with glmnet arguments for programming efficiency and as
+#' a check on reasonable models.  It is likely that a model with a factor on the
+#' right-hand side of the formula should not be evaluated with elastic net.
+#' There does not appear to be a check or warning in glmnetUtils for factor, or
+#' character (which will be coerced to a factor) variables on the right-hand
+#' side of the formula statement.  ensr and glmnet, by requiring the user to
+#' specify the response and support matrices forces the user to be aware of, and
+#' explicitly handle possible character/factor predictor variables.  (Binary
+#' factors and non-trivial in this context as well, but are considerably less
+#' difficult to deal with then factors with three or more possible values.)
+#'
+#' The second major difference between ensr and glmnetUtils is the
+#' $\lambda$-$\alpha$ grid, or lack-thereof, used in the search.  ensr builds a
+#' grid and evaluates `cv.glmnet` at least twice for each value of $\lambda.$
+#' That is, for each value of $\lambda$ there are at least two values of
+#' $\alpha$ which will be considered.  glmnetUtils only uses the default
+#' $\labmda$ values for each specific $\alpha$ value.  By constructing a
+#' $\labmda$-$\alpha$ grid, ensr provides minimally sufficient support for
+#' estimating a contour plot for a (x = $\alpha,$ y = $\lambda,$ z =
+#' cross-validation mean error) surface.  The glmnetUtils results require
+#' imputation before such a surface could be estimated.  We opine the selection
+#' of a $\labmda$-$\alpha$ pair should be based on a grid search.
+#'
+#/*
+# end An alternative approach ---------------------------------------------- }}}
+#*/
+
 # /*
 # --------------------------- Session Information -----------------------------
 # */
