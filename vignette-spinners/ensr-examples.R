@@ -480,6 +480,9 @@ do.call(cbind,
 #' imputation before such a surface could be estimated.  We opine the selection
 #' of a $\labmda$-$\alpha$ pair should be based on a grid search.
 #'
+#' See the example script `compare-to-glmnetUtils.R` in the `examples` directory
+#' on the ensr github page: https://github.com/dewittpe/ensr.
+#'
 #/*
 # end An alternative approach ---------------------------------------------- }}}
 #*/
