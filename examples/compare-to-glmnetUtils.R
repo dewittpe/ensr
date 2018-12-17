@@ -56,10 +56,12 @@ set.seed(42)
 #'
 #' Example:
 
+
 # ensr approach
 ymat <- as.matrix(tbi[, injury1])
 xmat <- as.matrix(tbi[, pcode1:ncode6])
-ensr_object <- ensr(y = ymat, x = xmat, standardize = FALSE, family = "binomial")
+foldid <- rep(seq(10), length.out = nrow(tbi))
+ensr_object <- ensr(y = ymat, x = xmat, standardize = FALSE, family = "binomial", foldid = foldid)
 
 
 # glmnetUtils object
@@ -68,7 +70,8 @@ glmnetUtils_object <-
              data = tbi,
              standardize = FALSE,
              family = "binomial",
-             alpha = seq(0, 1, length = 11))
+             alpha = seq(0, 1, length = 11),
+             foldid = foldid)
 
 glmnetUtils_lambdas <- lapply(glmnetUtils_object$modlist, `[[`, "lambda")
 glmnetUtils_cvm     <- lapply(glmnetUtils_object$modlist, `[[`, "cvm")
@@ -95,19 +98,31 @@ ggplot(glmnetUtils_plot_data) +
 #' error.
 #'
 # ensr plot vs glmnetUtils
-gridExtra::grid.arrange(
-plot(ensr_object) + theme_bw() + ggtitle("ensr") 
-,
-ggplot(glmnetUtils_plot_data) +
+ensr_plot_data <- plot(ensr_object)$data
+
+ensr_plot <- 
+  ggplot(ensr_plot_data) +
+  theme_bw() + 
+  aes(x = alpha, y = lambda, z = log10(z), color = log10(z)) +
+  geom_point() +
+  geom_point(data = ensr_plot_data[cvm == min(cvm)], size = 2, color = "red") +
+  ggtitle("glmnetUtils") +
+  ggplot2::scale_color_gradient2(limits = c(-5, log10(5))) +
+  geom_contour() +
+  scale_y_log10(limits = c(1e-5, 1e2))
+
+glmnetUtils_plot <-
+  ggplot(glmnetUtils_plot_data) +
   theme_bw() + 
   aes(x = alpha, y = lambda, z = z, color = log10(z)) +
   geom_point() +
-  scale_y_log10() + 
   geom_point(data = glmnetUtils_plot_data[cvm == min(cvm)], size = 2, color = "red") +
   ggtitle("glmnetUtils") +
-  ggplot2::scale_color_gradient2(low = "#1b7837", mid = "black", high = "#762183")
-,
-nrow = 1)
+  ggplot2::scale_color_gradient2(limits = c(-5, log10(5))) +
+  scale_y_log10(limits = c(1e-5, 1e2))
+
+grid.arrange(ensr_plot, glmnetUtils_plot, nrow = 1)
 
 
-
+#'
+#' Very similar results.
