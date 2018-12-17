@@ -7,6 +7,8 @@
 #' @param x the predictor matrix
 #' @param alpha the glmnet alpha value
 #' @param standardize logicial, should the x matrix be standardized?
+#' @param lmin_factor the smallest lambda value is defined as \code{lmin_factor
+#' * max(lambda)} where \code{max(lambda)} is determined by this function.
 #' @param ... other args
 #'
 #' @examples
@@ -57,10 +59,10 @@
 #'      })
 #'
 #' @export
-lambda_max <- function(y, x, standardize = TRUE, alpha = 0, ...) {
+lambda_max <- function(y, x, standardize = TRUE, alpha = 0, lmin_factor = 0.0001, ...) {
 
   a0 <- sapply(lapply(alpha, all.equal, 0), isTRUE)
-  if (any(a0)) alpha[a0] <- 0.001
+  if (any(a0)) alpha[a0] <- lmin_factor
 
   if (standardize) {
     x <- apply(x, 2, scale)
@@ -81,6 +83,8 @@ lambda_max <- function(y, x, standardize = TRUE, alpha = 0, ...) {
 #' @param alphas  a vector a alpha values corresponding to the max lambdas
 #' @param nlambda number of lambdas to generate for each alpha before creating the
 #' grid
+#' @param lmin_factor the smallest lambda value is defined as \code{lmin_factor
+#' * max(lambda)} where \code{max(lambda)} is determined by this function.
 #'
 #' @examples
 #'
@@ -102,7 +106,7 @@ lambda_max <- function(y, x, standardize = TRUE, alpha = 0, ...) {
 #'   ggplot2::scale_color_gradient2(low = "blue", high = "red", mid = "grey")
 #'
 #' @export
-lambda_alpha_grid <- function(lambdas, alphas, nlambda = 10L) {
+lambda_alpha_grid <- function(lambdas, alphas, nlambda = 10L, lmin_factor = 0.0001) {
 
   all_alphas <- sort(c(alphas, alphas[-length(alphas)] + diff(alphas) / 2))
   all_lmaxs  <- rep(lambdas, each = 2)
@@ -113,12 +117,12 @@ lambda_alpha_grid <- function(lambdas, alphas, nlambda = 10L) {
     Map(function(a, lmax, lmin) { data.table::data.table(a = a, l = 10^seq(log10(lmin), log10(lmax), length = nlambda)) },
         a = top$a,
         lmax = top$l,
-        MoreArgs = list(lmin = 0.001 * min(all_lmaxs)))
+        MoreArgs = list(lmin = lmin_factor * min(all_lmaxs)))
 
   alll <- unique(unlist(lapply(lgrids, `[[`, "l")))
 
   lgrid <-
-    Map(function(a, l) { data.table::data.table(a = a, l = alll[which(alll <= l & alll >= 0.001 * l)]) }, a = top$a, l = top$l)
+    Map(function(a, l) { data.table::data.table(a = a, l = alll[which(alll <= l & alll >= lmin_factor * l)]) }, a = top$a, l = top$l)
   lgrid <- data.table::rbindlist(lgrid)
 
   list(top = top, lgrid = lgrid)
