@@ -4,7 +4,7 @@
 \alias{lambda_alpha_grid}
 \title{Lambda Alpha Grid}
 \usage{
-lambda_alpha_grid(lambdas, alphas, nlambda = 10L)
+lambda_alpha_grid(lambdas, alphas, nlambda = 10L, lmin_factor = 1e-04)
 }
 \arguments{
 \item{lambdas}{a vector of max values for each alpha given}
@@ -13,6 +13,9 @@ lambda_alpha_grid(lambdas, alphas, nlambda = 10L)
 
 \item{nlambda}{number of lambdas to generate for each alpha before creating the
 grid}
+
+\item{lmin_factor}{the smallest lambda value is defined as \code{lmin_factor
+* max(lambda)} where \code{max(lambda)} is determined by this function.}
 }
 \description{
 Construct a data frame with values for lambda and alpha with an indicator to

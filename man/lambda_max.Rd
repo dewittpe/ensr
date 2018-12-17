@@ -4,7 +4,8 @@
 \alias{lambda_max}
 \title{Lambda Max}
 \usage{
-lambda_max(y, x, standardize = TRUE, alpha = 0, ...)
+lambda_max(y, x, standardize = TRUE, alpha = 0, lmin_factor = 1e-04,
+  ...)
 }
 \arguments{
 \item{y}{the response vector}
@@ -14,6 +15,9 @@ lambda_max(y, x, standardize = TRUE, alpha = 0, ...)
 \item{standardize}{logicial, should the x matrix be standardized?}
 
 \item{alpha}{the glmnet alpha value}
+
+\item{lmin_factor}{the smallest lambda value is defined as \code{lmin_factor
+* max(lambda)} where \code{max(lambda)} is determined by this function.}
 
 \item{...}{other args}
 }

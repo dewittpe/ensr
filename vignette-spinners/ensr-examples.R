@@ -213,15 +213,15 @@ ggplot(summary(ensr_obj)[, .SD[cvm == min(cvm)], by = nzero]) +
 #' Based on the figure above, if the objective is lowest cross validation error
 #' and parsimony, the model with 14 non-zero coefficients
 #' may be the preferable model. The additional non-zero coefficient in the model
-#' with 15 coefficients does not meaningfully reduce
+#' with 15 or more non-zero coefficients does not meaningfully reduce
 #' the mean cross validation error. Further examination shows that the model with
-#' only five non-zero coefficients might also be a reasonable choice.
-summary(ensr_obj)[nzero %in% c(5, 15)] [, .SD[cvm == min(cvm)], by = nzero]
+#' only four non-zero coefficients might also be a reasonable choice.
+summary(ensr_obj)[nzero %in% c(4, 14)] [, .SD[cvm == min(cvm)], by = nzero]
 
 #'
 #' To obtain the coefficients from the above models:
-landfill_evap_coef5  <- coef(ensr_obj[[19]], s = 0.0020028865)
-landfill_evap_coef15 <- coef(ensr_obj[[16]], s = 0.0007266755)
+landfill_evap_coef4  <- coef(ensr_obj[[19]], s = 0.0023788208)
+landfill_evap_coef14 <- coef(ensr_obj[[16]], s = 0.0007415985)
 
 #'
 #' The table below shows the variables for each model in descending order of the
@@ -230,11 +230,11 @@ landfill_evap_coef15 <- coef(ensr_obj[[16]], s = 0.0007266755)
 #' sensitivity/influence/importance metric.
 qwraps2::qable(
                data.table(
-                          variable = c(rownames(landfill_evap_coef5),
-                                       rownames(landfill_evap_coef15)),
-                          value    = c(as.vector(matrix(landfill_evap_coef5)),
-                                       as.vector(matrix(landfill_evap_coef15))),
-                          nzero    = c(rep(5, 36), rep(15, 36))
+                          variable = c(rownames(landfill_evap_coef4),
+                                       rownames(landfill_evap_coef14)),
+                          value    = c(as.vector(matrix(landfill_evap_coef4)),
+                                       as.vector(matrix(landfill_evap_coef14))),
+                          nzero    = c(rep(4, 36), rep(14, 36))
                           )[
                             abs(value) >= 1e-10 & variable != "(Intercept)"
                             ][
@@ -244,8 +244,8 @@ qwraps2::qable(
                             nzero := NULL
                             ]
                ,
-               rgroup = c("nzero = 5" = 5, "nzero = 15"= 15),
-               rnames = c(1:5, 1:15))
+               rgroup = c("nzero = 4" = 4, "nzero = 14"= 14),
+               rnames = c(1:4, 1:14))
 
 #'
 #' The variables most important for modeling evaporation are `weather_temp`
