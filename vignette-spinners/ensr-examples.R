@@ -19,10 +19,27 @@ library(knitr)
 knitr::opts_chunk$set(collapse = TRUE, fig.width = 6, fig.height = 4)
 options(qwraps2_markup = "markdown")
 
+# Rpkg : use this function in the text for format the appearance of package
+# names.  This is modeled after the BiocStyle::Rpacakge function.  The package
+# name can be passed in quotes or a bare name.  This formating is done to help
+# distinguish between a package name and a function.
+Rpkg <- function(pkg) {
+  pkg <- deparse(substitute(pkg))
+  pkg <- gsub("\"|\'", "", pkg)
+  sprintf("*%s*", pkg) 
+}
+
+# example:
+Rpkg(ensr)
+Rpkg("ensr")
+
+# NOTE: Functions should be in surrounded by backticks, e.g., the `ensr`
+# function in the `r Rpkg(ensr)` package.
+
 #'
-#' The primary purpose of the ensr package is to provide methods for simultaneously searching
+#' The primary purpose of the `r Rpkg(ensr)` package is to provide methods for simultaneously searching
 #' for preferable values of $\lambda$ and $\alpha$ in elastic net regression.
-#' `ensr` is wrapped around the [glmnet](https://cran.r-studio.com/package=glmnet) package
+#' `r Rpkg(ensr)` is wrapped around the [`r Rpkg("glmnet")`](https://cran.r-studio.com/package=glmnet) package
 #' This vignette starts with a summary of elastic net regression and its use and limitations.
 #' Examples of data set preparation follow and the vignette concludes with elastic net regression
 #' results.
@@ -69,11 +86,11 @@ options(datatable.print.topn  = 3L,
 #' pipeline. More flexible machine learning models such as gradient boosting machines may
 #' be able to fit data more accurately, but they are extremely difficult to export to other tools.
 #'
-#' The `cv.glmnet` call from the glmnet package is used for fitting elastic
+#' The `cv.glmnet` call from the `r Rpkg(glmnet)` package is used for fitting elastic
 #' nets. However, the current implementation of `cv.glmnet` requires that the value(s) 
 #' of $\alpha$ be specified by the user (see "Details" in `help("cv.glmnet")`). 
-#' We designed the `ensr` package to fill this gap by simultaneously searching for a 
-#' preferable set of $\lambda$ and $\alpha$ values. `ensr` also provides additional
+#' We designed the `r Rpkg(ensr)` package to fill this gap by simultaneously searching for a 
+#' preferable set of $\lambda$ and $\alpha$ values. `r Rpkg(ensr)` also provides additional
 #' plotting methods to facilitate visual identification of the best choice for a given project.
 #' 
 # /*
@@ -84,7 +101,7 @@ options(datatable.print.topn  = 3L,
 # */
 #' # Data Sets
 #'
-#' There are two data sets provided in the ensr package for examples.
+#' There are two data sets provided in the `r Rpkg(ensr)` package for examples.
 #'
 #' 1. `tbi` is a synthetic data set for classifying three different types of
 #' traumatic brain injury by a set of predictors.
@@ -306,7 +323,7 @@ cbind(coef(ensr_obj_1), coef(ensr_obj_2), coef(ensr_obj_3))
 #' reasonable to assume that there should be common variables with non-zero
 #' coefficients for models of each injury.  The end user could fit three
 #' univariate models, or, fit one multinomial model via the tools provided by
-#' `glmnet`.
+#' `r Rpkg(glmnet)`.
 #'
 #' To illustrate these options we will run `ensr` five times: three univariate
 #' models, one multinomial model with `type.multinomial` set to the default
@@ -431,7 +448,7 @@ do.call(cbind,
 
 #'
 #' Lastly, similar work and can be done for multivariate Gaussian responses.
-#' See the documentation for `glmnet` for details.
+#' See the documentation `help("glmnet", package = "glmnet")` for details.
 #'
 # /*
 # End of Multivariate Response ----------------------------------------------}}}
@@ -445,43 +462,43 @@ do.call(cbind,
 #*/
 #' # Alternative Approaches
 #'
-#' Our ensr package is not the only approach to searching for $\labmda$ and
+#' Our `r Rpkg(ensr)` package is not the only approach to searching for $\labmda$ and
 #' $\alpha$. The
-#' [`glmnetUtils`](https://cran.r-progject.org/package=glmnetUtils)
+#' [`r Rpkg(glmnetUtils)`](https://cran.r-progject.org/package=glmnetUtils)
 #' [@glmnetUtils] is the most notable comparative package.  We encourage the
-#' reader to explore the glmnetUtils package and determine if it meets your
-#' needs as well, or better than the ensr package.
+#' reader to explore the `r Rpkg(glmnetUtils)` package and determine if it meets your
+#' needs as well, or better than the `r Rpkg(ensr)` package.
 #'
-#' There are two major differences in the implementation of ensr and
-#' glmnetUtils.  The first major difference is that
-#' glmnetUtils allows users to specify glmnet models with a
-#' formula, e.g., `y ~ x1 + x2 + x3`, whereas ensr maintains the glmnet
+#' There are two major differences in the implementation of `r Rpkg(ensr)` and
+#' `r Rpkg(glmnetUtils)`.  The first major difference is that
+#' `r Rpkg(glmnetUtils)` allows users to specify `glmnet::glmnet` models with a
+#' formula, e.g., `y ~ x1 + x2 + x3`, whereas `r Rpkg(ensr)` maintains the `r Rpkg(glmnet)`
 #' requirement of the user providing y and x matrices.  We opted for the
-#' simplicity of saying with glmnet arguments for programming efficiency and as
+#' simplicity of staying with `glmnet::glmnet` arguments for programming efficiency and as
 #' a check on reasonable models.  It is likely that a model with a factor on the
 #' right-hand side of the formula should not be evaluated with elastic net.
-#' There does not appear to be a check or warning in glmnetUtils for factor, or
+#' There does not appear to be a check or warning in `r Rpkg(glmnetUtils)` for factor, or
 #' character (which will be coerced to a factor) variables on the right-hand
-#' side of the formula statement.  ensr and glmnet, by requiring the user to
+#' side of the formula statement.  `r Rpkg(ensr)` and `r Rpkg(glmnet)`, by requiring the user to
 #' specify the response and support matrices forces the user to be aware of, and
 #' explicitly handle possible character/factor predictor variables.  (Binary
 #' factors and non-trivial in this context as well, but are considerably less
 #' difficult to deal with then factors with three or more possible values.)
 #'
-#' The second major difference between ensr and glmnetUtils is the
-#' $\lambda$-$\alpha$ grid, or lack-thereof, used in the search.  ensr builds a
-#' grid and evaluates `cv.glmnet` at least twice for each value of $\lambda.$
+#' The second major difference between `r Rpkg(ensr)` and `r Rpkg(glmnetUtils)` is the
+#' $\lambda$-$\alpha$ grid, or lack-thereof, used in the search.  `r Rpkg(ensr)` builds a
+#' grid and evaluates `glmnet::cv.glmnet` at least twice for each value of $\lambda.$
 #' That is, for each value of $\lambda$ there are at least two values of
-#' $\alpha$ which will be considered.  glmnetUtils only uses the default
+#' $\alpha$ which will be considered.  `r Rpkg(glmnetUtils)` only uses the default
 #' $\labmda$ values for each specific $\alpha$ value.  By constructing a
-#' $\labmda$-$\alpha$ grid, ensr provides minimally sufficient support for
+#' $\labmda$-$\alpha$ grid, `r Rpkg(ensr)` provides minimally sufficient support for
 #' estimating a contour plot for a (x = $\alpha,$ y = $\lambda,$ z =
-#' cross-validation mean error) surface.  The glmnetUtils results require
+#' cross-validation mean error) surface.  The `r Rpkg(glmnetUtils)` results require
 #' imputation before such a surface could be estimated.  We opine the selection
 #' of a $\labmda$-$\alpha$ pair should be based on a grid search.
 #'
 #' See the example script `compare-to-glmnetUtils.R` in the `examples` directory
-#' on the ensr github page: https://github.com/dewittpe/ensr.
+#' on the `r Rpkg(ensr)` github page: https://github.com/dewittpe/ensr.
 #'
 #/*
 # end An alternative approach ---------------------------------------------- }}}
