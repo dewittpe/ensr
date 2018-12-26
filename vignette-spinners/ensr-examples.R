@@ -26,7 +26,7 @@ options(qwraps2_markup = "markdown")
 Rpkg <- function(pkg) {
   pkg <- deparse(substitute(pkg))
   pkg <- gsub("\"|\'", "", pkg)
-  sprintf("*%s*", pkg) 
+  sprintf("*%s*", pkg)
 }
 
 # example:
@@ -60,7 +60,7 @@ options(datatable.print.topn  = 3L,
 #'
 #' Elastic Net Regression [@friedman2010regularization] is a penalized linear
 #' modeling approach that is a mixture of ridge regression [@hoerl1970ridge],
-#' and least absolute shrinkage and selection operator (LASSO) regression [@tibshirani1996regression].  
+#' and least absolute shrinkage and selection operator (LASSO) regression [@tibshirani1996regression].
 #' Ridge regression reduces the impact of collinearity on model parameters and LASSO
 #' reduces the dimensionality of the support by shrinking some of the regression
 #' coefficients to zero.  Elastic net does both of these by solving the
@@ -76,23 +76,23 @@ options(datatable.print.topn  = 3L,
 #' Ridge regression does not often shrink coefficients to zero and contribute to
 #' the parsimony of models. One potential benefit of elastic net regression with is that, like the LASSO,
 #' it can be used to perform variable selection by shrinking coefficients to zero.
-#' Compared to LASSO, one potential benefit of elastic net regression is that it will reproducibly return 
-#' the same set of non-zero coefficients when some predictors are highly correlated. 
+#' Compared to LASSO, one potential benefit of elastic net regression is that it will reproducibly return
+#' the same set of non-zero coefficients when some predictors are highly correlated.
 #' LASSO, $\alpha = 1,$ may return different sets of non-zero coefficients when highly correlated
 #' predictors are in the model.
 #'
-#' Compared to other machine learning approaches, a potential benefit of elastic net regression 
+#' Compared to other machine learning approaches, a potential benefit of elastic net regression
 #' is that the $\beta$ vector is easily interpretable and can be implemented in almost any downstream computational
 #' pipeline. More flexible machine learning models such as gradient boosting machines may
 #' be able to fit data more accurately, but they are extremely difficult to export to other tools.
 #'
 #' The `cv.glmnet` call from the `r Rpkg(glmnet)` package is used for fitting elastic
-#' nets. However, the current implementation of `cv.glmnet` requires that the value(s) 
-#' of $\alpha$ be specified by the user (see "Details" in `help("cv.glmnet")`). 
-#' We designed the `r Rpkg(ensr)` package to fill this gap by simultaneously searching for a 
+#' nets. However, the current implementation of `cv.glmnet` requires that the value(s)
+#' of $\alpha$ be specified by the user (see "Details" in `help("cv.glmnet")`).
+#' We designed the `r Rpkg(ensr)` package to fill this gap by simultaneously searching for a
 #' preferable set of $\lambda$ and $\alpha$ values. `r Rpkg(ensr)` also provides additional
 #' plotting methods to facilitate visual identification of the best choice for a given project.
-#' 
+#'
 # /*
 # --------------------------------------------------------------------------}}}
 # */
@@ -268,7 +268,7 @@ qwraps2::qable(
 #' The variables most important for modeling evaporation are `weather_temp`
 #' (average temperature over the last 100 years),
 #' `wind` (average wind speed), `weather_solrad` (average solar radiation), and
-#' `rh` (relative humidity).  The fifth and higher coefficients are considerably 
+#' `rh` (relative humidity).  The fifth and higher coefficients are considerably
 #' smaller and less important than the first four.
 #'
 #/*
@@ -280,7 +280,11 @@ qwraps2::qable(
 #'
 #' ## Cross Validation Issues
 #'
-#' The results above are subject to the `foldid`, as shown below:
+#' As with any cross-validation procedure, the results are subject to the
+#' `foldid`.  Simply put, this is due to certain data points always being
+#' considered together as either training or validation.  For example, three
+#' randomly generated vectors for 10-fold cross-validation are generated below
+#' and the results from calls to `ensr` are shown below.
 foldid1 <- sample(seq(10), size = nrow(x_matrix), replace = TRUE)
 foldid2 <- sample(seq(10), size = nrow(x_matrix), replace = TRUE)
 foldid3 <- sample(seq(10), size = nrow(x_matrix), replace = TRUE)
