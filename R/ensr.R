@@ -85,7 +85,10 @@ plot.ensr_summary <- function(x, type = c(1), ...) {
 
   if (2 %in% type) {
     x2 <- data.table::copy(x) 
-    x2 <- data.table::rbindlist(lapply(unique(x2$nzero), function(i) { subset(subset(x2, nzero == i), cvm == min(cvm)) }))
+    x2 <- data.table::rbindlist(lapply(unique(x2$nzero), function(i) {
+                                         x3 <- subset(x2, x2$nzero == i)
+                                         subset(x3, x3$cvm == min(x3$cvm))
+             }))
 
     g2 <- 
       ggplot2::ggplot(x2) +
