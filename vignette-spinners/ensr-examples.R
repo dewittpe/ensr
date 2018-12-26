@@ -193,9 +193,16 @@ plot(preferable(ensr_obj), xvar = "dev")
 #' are plotted.  The coloring is denoted as `log10(z)` where `z = (cvm -
 #' min(cvm)) / sd(cvm)`.   The color scale is set to have low values, values
 #' near the minimum mean cross validation error, to be dark green, values moving
-#' further from the minimum are lighter green, moving to white then purple.
+#' further from the minimum are lighter green, moving to white then purple.  A
+#' red cross is plotting showing the minimum mean cross-validation error.
+plot(ensr_obj)
+
+#'
+#' The graphics are `ggplot` object and thus can be modified to your liking,
+#' e.g., add the black-and-white theme and use `ggforce::facet_zoom` to zoom in
+#' on a section of the graphic:
 plot(ensr_obj) +
-  theme_bw() +
+  theme_minimal() +
   facet_zoom(x = 0.50 < alpha & alpha < 0.90, y = 5e-4 < lambda & lambda < 1.5e-3)
 
 #'
@@ -219,7 +226,14 @@ summary(ensr_obj)[, .SD[cvm == min(cvm)], by = alpha][l_index %in% c(13, 16)]
 #' We can also look at the mean cross validation errors by `nzero`.
 summary(ensr_obj)[, .SD[cvm == min(cvm)], by = nzero]
 
-ggplot(summary(ensr_obj)[, .SD[cvm == min(cvm)], by = nzero]) +
+#'
+#' The `plot` method for `ensr` objects has a `type` argument.  The default is
+#' `type = 1` as plotted above.  `type = 2` plots:
+plot(ensr_obj, type = 2)
+
+#'
+#' Some customization to the plot:
+plot(ensr_obj, type = 2) +
   theme_bw() +
   aes(x = nzero, y = cvm) +
   geom_point() +
@@ -234,6 +248,10 @@ ggplot(summary(ensr_obj)[, .SD[cvm == min(cvm)], by = nzero]) +
 #' the mean cross validation error. Further examination shows that the model with
 #' only four non-zero coefficients might also be a reasonable choice.
 summary(ensr_obj)[nzero %in% c(4, 14)] [, .SD[cvm == min(cvm)], by = nzero]
+
+#'
+#' A quick side note: you can get both types of plots in one call:
+plot(ensr_obj, type = c(1, 2))
 
 #'
 #' To obtain the coefficients from the above models:
@@ -380,14 +398,13 @@ fit_123_grouped <-
 #' fits.
 #'
 #+ fig.width = 8, fig.height = 8
-gridExtra::grid.arrange(
-plot(fit_1) + ggplot2::ggtitle("Fit 1"),
-plot(fit_2) + ggplot2::ggtitle("Fit 2"),
-plot(fit_3) + ggplot2::ggtitle("Fit 3"),
-plot(fit_123_ungrouped) + ggplot2::ggtitle("Fit 123 Ungrouped"),
-plot(fit_123_grouped) + ggplot2::ggtitle("Fit 123 Grouped"),
-layout_matrix = rbind(c(1, 1, 2, 2, 3, 3),
-                      c(4, 4, 4, 5, 5, 5)))
+gridExtra::grid.arrange(plot(fit_1) + ggplot2::ggtitle("Fit 1"),
+                        plot(fit_2) + ggplot2::ggtitle("Fit 2"),
+                        plot(fit_3) + ggplot2::ggtitle("Fit 3"),
+                        plot(fit_123_ungrouped) + ggplot2::ggtitle("Fit 123 Ungrouped"),
+                        plot(fit_123_grouped) + ggplot2::ggtitle("Fit 123 Grouped"),
+                        layout_matrix = rbind(c(1, 1, 2, 2, 3, 3),
+                                              c(4, 4, 4, 5, 5, 5)))
 
 #'
 #' The summary for these models

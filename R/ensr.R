@@ -65,25 +65,49 @@ print.ensr_summary <- function(x, ...) {
 }
 
 #' @export
-plot.ensr_summary <- function(x, ...) {
-  sout <- data.table::copy(x)
-  data.table::set(sout, j = "z", value = standardize(sout$cvm, stats = list(center = "min", scale = "sd")))
-  imin <- which.min(sout$cvm)
+plot.ensr_summary <- function(x, type = c(1), ...) {
 
-  ggplot2::ggplot(sout) +
-  ggplot2::aes_string(x = "alpha", y = "lambda", z = "log10(z)", color = "log10(z)") +
-  ggplot2::geom_point() +
-  ggplot2::geom_contour() +
-  ggplot2::scale_y_log10() +
-  ggplot2::geom_point(data = sout[imin, ], cex = 2,  pch = 4, color = "red") +
-  ggplot2::scale_color_gradient2(low = "#1b7837", high = "#762183") +
-  ggplot2::xlab(expression(alpha)) +
-  ggplot2::ylab(expression(lambda))
+  if (1 %in% type) {
+    sout <- data.table::copy(x)
+    data.table::set(sout, j = "z", value = standardize(sout$cvm, stats = list(center = "min", scale = "sd")))
+    imin <- which.min(sout$cvm)
+    g1 <-
+      ggplot2::ggplot(sout) +
+      ggplot2::aes_string(x = "alpha", y = "lambda", z = "log10(z)", color = "log10(z)") +
+      ggplot2::geom_point() +
+      ggplot2::geom_contour() +
+      ggplot2::scale_y_log10() +
+      ggplot2::geom_point(data = sout[imin, ], cex = 2,  pch = 4, color = "red") +
+      ggplot2::scale_color_gradient2(low = "#1b7837", high = "#762183") +
+      ggplot2::xlab(expression(alpha)) +
+      ggplot2::ylab(expression(lambda))
+  }
+
+  if (2 %in% type) {
+    x2 <- data.table::copy(x) 
+    x2 <- data.table::rbindlist(lapply(unique(x2$nzero), function(i) { subset(subset(x2, nzero == i), cvm == min(cvm)) }))
+
+    g2 <- 
+      ggplot2::ggplot(x2) +
+      ggplot2::aes_string(x = "nzero", y = "cvm") +
+      ggplot2::geom_line() +
+      ggplot2::geom_point() 
+  }
+
+  if (all( c(1, 2) %in% type)) {
+    gridExtra::grid.arrange(g1, g2, nrow = 1)
+  } else if (1 %in% type) {
+    g1
+  } else if (2 %in% type) {
+    g2
+  } else {
+    stop("Unknown plot type.")
+  } 
 }
 
 #' @export
-plot.ensr <- function(x, ...) {
-  graphics::plot(summary(x), ...)
+plot.ensr <- function(x, type = c(1), ...) {
+  graphics::plot(summary(x), type = type, ...)
 }
 
 #' Predict Methods for ensr objects
