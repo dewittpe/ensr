@@ -34,7 +34,7 @@ machine you will need to have [Rtools](https://cran.r-project.org/bin/windows/Rt
 Within an active R session evaluate the following:
 ```r
 if ('remotes' %in% rownames(installed.packages())) {
-  install.packages('devtools', repos = "https://cran.rstudio.com")
+  install.packages('remotes', repos = "https://cran.rstudio.com")
 }
 remotes::install_github("dewittpe/ensr", build_opts = c("--no-resave-data"))
 ```
