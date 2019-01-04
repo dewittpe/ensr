@@ -21,13 +21,13 @@ Imports:
     data.table,
     ggplot2
 Suggests:
-    covr,
     digest,
     ggforce, 
     gridExtra,
     knitr,
     magrittr,
     microbenchmark,
-    qwraps2
+    qwraps2,
+    rmarkdown
 RoxygenNote: 6.1.1
 VignetteBuilder: knitr
