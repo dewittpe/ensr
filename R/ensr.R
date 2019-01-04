@@ -7,7 +7,7 @@
 #' @param alphas a sequence alpha values
 #'
 #' @export
-ensr <- function(y, x, alphas = seq(0.00, 1.00, length = 10), nlambda = 100L, standardize = TRUE, nfolds = 10L, foldid, ...) {
+ensr <- function(x, y, alphas = seq(0.00, 1.00, length = 10), nlambda = 100L, standardize = TRUE, nfolds = 10L, foldid, ...) {
 
   # build a single set of folds
   if (missing(foldid)) {

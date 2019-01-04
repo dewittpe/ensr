@@ -6,13 +6,13 @@
 \alias{ensr-package}
 \title{Elastic Net SearcheR}
 \usage{
-ensr(y, x, alphas = seq(0, 1, length = 10), nlambda = 100L,
+ensr(x, y, alphas = seq(0, 1, length = 10), nlambda = 100L,
   standardize = TRUE, nfolds = 10L, foldid, ...)
 }
 \arguments{
-\item{y}{response \code{y} as in \code{glmnet}.}
-
 \item{x}{\code{x} matrix as in \code{glmnet}.}
+
+\item{y}{response \code{y} as in \code{glmnet}.}
 
 \item{alphas}{a sequence alpha values}
 
