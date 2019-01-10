@@ -8,7 +8,7 @@ output:
 bibliography: references.bib
 vignette: >
  %\VignetteEngine{knitr::rmarkdown}
- %\VignetteIndexEntry{ensr-examples}
+ %\VignetteIndexEntry{ensr-datasets}
  %\VignetteEncoding{UTF-8}
 ---
 
