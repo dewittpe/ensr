@@ -17,9 +17,9 @@ knitr::opts_chunk$set(collapse = TRUE)
 options(qwraps2_markup = "markdown")
 
 #'
-#' This vignette provides a description for the example data sets in the ensr
-#' package.  Details on how the data sets were constructed are provdided along
-#' with extended documentation of the individual variables within the data sets.
+#' This vignette provides descriptions of the example data sets in the `r Rpkg(ensr)`
+#' package.  We provide information about how the data sets were built and also
+#' about each individual variable.
 #'
 #' The packages needed to constuct the data sets are:
 library(data.table)
@@ -46,9 +46,9 @@ library(ensr)
 #'
 #' # Traumatic Brain Injuries
 #'
-#' A synthetic data set based based on a Traumatic Brain Injury (TBI) study data
-#' set has been included with the ensr package.  All data points in this data
-#' set have been randomly generated and have no association with any real TBI
+#' A synthetic data set based based on a Traumatic Brain Injury (TBI) study
+#'  has been included with the `r Rpkg(ensr)` package.  All data points in this data
+#' set have been randomly generated and have no association with any real
 #' patient.
 #'
 #' The columns of this data set are:
