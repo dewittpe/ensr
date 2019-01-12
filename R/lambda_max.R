@@ -1,6 +1,6 @@
 #' Lambda Max
 #'
-#' Determine the lambda_max value that would be genteraged from a call to
+#' Determine the lambda_max value that would be generated from a call to
 #' \code{\link[glmnet]{glmnet}} without making that call.
 #'
 #' @param y the response vector
@@ -79,8 +79,8 @@ lambda_max <- function(y, x, standardize = TRUE, alpha = 0, lmin_factor = 0.0001
 #' Construct a data frame with values for lambda and alpha with an indicator to
 #' know if the model is worth fitting.
 #'
-#' @param lambdas a vector of max values for each alpha given
-#' @param alphas  a vector a alpha values corresponding to the max lambdas
+#' @param lambdas a vector of max lambda values for each alpha given
+#' @param alphas  a vector of alpha values corresponding to the max lambdas
 #' @param nlambda number of lambdas to generate for each alpha before creating the
 #' grid
 #' @param lmin_factor the smallest lambda value is defined as \code{lmin_factor
