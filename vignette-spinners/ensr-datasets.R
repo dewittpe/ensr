@@ -327,16 +327,16 @@ regex_names <- function(pattern) {
 #' is adequate for most situations. However, with the landfill data the simple 
 #' centering and scaling could be considered inappropriate.  
 #' `scale` will use the mean and standard deviation of the input. 
-#' However, the landfill data contains repeated measurements.  Centering
-#' and scaling should be based on the mean and standard deviation of independent
-#' values.  The ensr function `standardize` will standardize a numeric vector
-#' based on unique values, by default, via either mean/standard deviation, or
-#' median/IQR.
+#' However, the landfill data contains measurements with the same values.  Centering
+#' and scaling should be based on the mean and standard deviation of just the unique
+#' values.  The ensr function `standardize` will, by default, standardize a numeric vector
+#' based on just the unique values using either the mean and standard deviation or the
+#' median and interquartile range (IQR).
 #'
 #' Here is an example.  There are `r qwraps2::frmt(nrow(landfill))` rows in the
 #' landfill data set.  There are `r length(unique(landfill$topsoil_alpha))`
-#' unique values for the van Genuchten $\alpha$ value.  Here are the different
-#' scale and centerings:
+#' unique values for the van Genuchten $\alpha$ value.  Here is how the
+#' standardization results are affected by non-unique predictor values:
 nrow(landfill)
 length(unique(landfill$topsoil_alpha))
 
@@ -363,7 +363,7 @@ all.equal(target  = scaled_topsoil_alpha_v3,
           current = scaled_topsoil_alpha_v4,
           check.attributes = FALSE)
 
-# Center and scale using the median and inner quartile range (IQR).
+# Center and scale using the median and IQR.
 scaled_topsoil_alpha_v5 <-
   as.vector(scale(landfill$topsoil_alpha,
                   center = median(unique(landfill$topsoil_alpha)),
@@ -378,17 +378,17 @@ all.equal(target  = scaled_topsoil_alpha_v5,
           check.attributes = FALSE)
 
 #'
-#' For the full landfill data set we can center and scale all the columns as:
+#' For the full landfill data set we can center and scale all the columns using:
 landfill <- standardize(landfill)
 
 #'
 #' Note that the values used for centering and scaling are retained as
 #' attributes for each variable in the data set.
-str( landfill[, 1:2] )
+str(landfill[, 1:2] )
 
 #'
-#' The `landfill` object that is generated in this vignette is the same as the
-#' one which you can call via `data(landfill, package = "ensr")`.
+#' The `landfill` object generated in this vignette is the same as the
+#' one generated using `data(landfill, package = "ensr")`.
 #/*
 if (!grepl("data-raw", getwd())) {
 #*/
