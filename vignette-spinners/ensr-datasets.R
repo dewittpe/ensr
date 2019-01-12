@@ -58,13 +58,12 @@ library(ensr)
 #' | `age`                     | Age of the patient, in days, at time of hospital admission                                              |
 #' | `female`                  | An integer flag for sex, 1 == female, 0 == male.                                                        |
 #' | `los`                     | Length of stay: number of days between hospital admission and discharge.
-#' | `pcode1`, ..., `pcode6`   | Indicator columns for the presence or absence of a procedure code sources from a trauma database.       |
-#' | `ncode1`, ..., `ncode6`   | Indicator columns for the presence or absence of the same procedure codes but from a billing data base. |
+#' | `pcode1`, ..., `pcode6`   | Indicator columns for the presence or absence of a procedure code from a billing database.              |
+#' | `ncode1`, ..., `ncode6`   | Indicator columns for the presence or absence of the same procedure code, but from a trauma database.  |
 #' | `injury1`, ..., `injury3` | Indicator columns for the presence or absence of three different types of TBI.                          |
 #'
 #'
-#' Construction of the synthetic data set is done by generating a data set with
-#' the predictor variables.
+#' Construction of the synthetic data set:
 TBI_SUBJECTS <- 1323L
 
 tbi <- data.table(age    = round(rweibull(TBI_SUBJECTS, shape = 1.9, scale = 2000)),
@@ -72,7 +71,7 @@ tbi <- data.table(age    = round(rweibull(TBI_SUBJECTS, shape = 1.9, scale = 200
                   los    = round(rexp(TBI_SUBJECTS, rate = 1/13)))
 
 #'
-#' The `pcode`s and `ncode` variables are difficult to simulate.  There are 64
+#' The `pcode` and `ncode` variables are difficult to simulate.  There are 64
 #' permutations for each set.  We built two vectors with relative frequencies of
 #' the codes.
 pcodes <-
@@ -143,7 +142,7 @@ ncodes
 tbi <- cbind(tbi, pcodes, ncodes)
 
 #'
-#' The three injury categories are constructed via prediction form a simplified
+#' The three injury categories are constructed by fitting a simplified
 #' logistic regression model.  The regression coefficient vectors are defined
 #' next.
 injury1_coef <-
@@ -254,8 +253,8 @@ usethis::use_data(tbi, overwrite = TRUE)
 #'
 #' The file `landfill.csv` contains results from a computer simulation of water
 #' percolation through five layers in a landfill over one year.  The raw data
-#' file is provided so the end user can explore their own preprocessing of the
-#' data sets.
+#' file is provided so the end user can explore their own pre-processing of the
+#' data.
 #/*
 if (grepl("data-raw", getwd())) {
   landfill <-  fread(file = "../inst/extdata/landfill.csv", sep = ",") 
@@ -317,21 +316,19 @@ regex_names <- function(pattern) {
 #'
 #' ## Landfill Data Preparation
 #'
-#' The elastic net method suggests that the predictors are centered and scaled
-#' and in the case of multi-variable responses, that the outcomes are centered
-#' and scaled as well.  For calls to `glmnet` and `cv.glmnet` the argument
-#' `standardized = TRUE` (default) to center and scale the values.  If you have
+#' The elastic net method suggests that all predictors be centered and scaled.
+#' In the case of multi-variable responses, it is recommended that the outcomes 
+#' be centered and scaled as well.  For calls to `glmnet` and `cv.glmnet`, the argument
+#' `standardized = TRUE` (default) will center and scale the values.  If you have
 #' already centered and scaled the data you may prefer to set `standardized =
 #' FALSE`.
 #'
-#' If you need, or want, to explicitly standardize your data you will likely
-#' find use of the base R function `scale` is sufficient for most cases.
-#' However, with the landfill data the simple centering and scaling could be
-#' considered improper.  `scale`, will use the mean and standard deviation of
-#' the input, that is fine if all the values in the input are unique
-#' observations.  In the landfill data, however, the manner by which the
-#' parameters where inputted into the computer program are repeated.  Centering
-#' and scaling should be based on the mean and standard deviation of unique
+#' If you want to explicitly standardize your data, the base R function `scale` 
+#' is adequate for most situations. However, with the landfill data the simple 
+#' centering and scaling could be considered inappropriate.  
+#' `scale` will use the mean and standard deviation of the input. 
+#' However, the landfill data contains repeated measurements.  Centering
+#' and scaling should be based on the mean and standard deviation of independent
 #' values.  The ensr function `standardize` will standardize a numeric vector
 #' based on unique values, by default, via either mean/standard deviation, or
 #' median/IQR.
