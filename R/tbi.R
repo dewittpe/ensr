@@ -4,7 +4,7 @@
 
 #' Synthetic Data Set for Traumatic Brain Injuries
 #'
-#' This data is synthetic, that is, it is random data generated to have similar
+#' This data is synthetic. It is random data generated to have similar
 #' properties to a data set used for studying traumatic brain injuries.  The
 #' \code{pcode1} ... \code{pcode6}, \code{ncode1} ... \code{ncode6} columns
 #' are indicators for procedure or billing codes associated with a hospital
@@ -16,18 +16,18 @@
 #' \item{age}{age, in days}
 #' \item{female}{indicator for sex, 1 == female, 0 == male}
 #' \item{los}{length of stay in the hosptial}
-#' \item{pcode1}{indicator for if the patient had a pcode1}
-#' \item{pcode2}{indicator for if the patient had a pcode2}
-#' \item{pcode3}{indicator for if the patient had a pcode3}
-#' \item{pcode4}{indicator for if the patient had a pcode4}
-#' \item{pcode5}{indicator for if the patient had a pcode5}
-#' \item{pcode6}{indicator for if the patient had a pcode6}
-#' \item{ncode1}{indicator for if the patient had a ncode1}
-#' \item{ncode2}{indicator for if the patient had a ncode2}
-#' \item{ncode3}{indicator for if the patient had a ncode3}
-#' \item{ncode4}{indicator for if the patient had a ncode4}
-#' \item{ncode5}{indicator for if the patient had a ncode5}
-#' \item{ncode6}{indicator for if the patient had a ncode6}
+#' \item{pcode1}{indicator for if the patient had pcode1}
+#' \item{pcode2}{indicator for if the patient had pcode2}
+#' \item{pcode3}{indicator for if the patient had pcode3}
+#' \item{pcode4}{indicator for if the patient had pcode4}
+#' \item{pcode5}{indicator for if the patient had pcode5}
+#' \item{pcode6}{indicator for if the patient had pcode6}
+#' \item{ncode1}{indicator for if the patient had ncode1}
+#' \item{ncode2}{indicator for if the patient had ncode2}
+#' \item{ncode3}{indicator for if the patient had ncode3}
+#' \item{ncode4}{indicator for if the patient had ncode4}
+#' \item{ncode5}{indicator for if the patient had ncode5}
+#' \item{ncode6}{indicator for if the patient had ncode6}
 #' \item{injury1}{First of three specific types of TBI}
 #' \item{injury2}{Second of three specific types of TBI}
 #' \item{injury3}{Third of three specific types of TBI}
