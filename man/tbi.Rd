@@ -10,18 +10,18 @@ Each row of the \code{tbi} data.table is a unique subject.
 \item{age}{age, in days}
 \item{female}{indicator for sex, 1 == female, 0 == male}
 \item{los}{length of stay in the hosptial}
-\item{pcode1}{indicator for if the patient had a pcode1}
-\item{pcode2}{indicator for if the patient had a pcode2}
-\item{pcode3}{indicator for if the patient had a pcode3}
-\item{pcode4}{indicator for if the patient had a pcode4}
-\item{pcode5}{indicator for if the patient had a pcode5}
-\item{pcode6}{indicator for if the patient had a pcode6}
-\item{ncode1}{indicator for if the patient had a ncode1}
-\item{ncode2}{indicator for if the patient had a ncode2}
-\item{ncode3}{indicator for if the patient had a ncode3}
-\item{ncode4}{indicator for if the patient had a ncode4}
-\item{ncode5}{indicator for if the patient had a ncode5}
-\item{ncode6}{indicator for if the patient had a ncode6}
+\item{pcode1}{indicator for if the patient had pcode1}
+\item{pcode2}{indicator for if the patient had pcode2}
+\item{pcode3}{indicator for if the patient had pcode3}
+\item{pcode4}{indicator for if the patient had pcode4}
+\item{pcode5}{indicator for if the patient had pcode5}
+\item{pcode6}{indicator for if the patient had pcode6}
+\item{ncode1}{indicator for if the patient had ncode1}
+\item{ncode2}{indicator for if the patient had ncode2}
+\item{ncode3}{indicator for if the patient had ncode3}
+\item{ncode4}{indicator for if the patient had ncode4}
+\item{ncode5}{indicator for if the patient had ncode5}
+\item{ncode6}{indicator for if the patient had ncode6}
 \item{injury1}{First of three specific types of TBI}
 \item{injury2}{Second of three specific types of TBI}
 \item{injury3}{Third of three specific types of TBI}
