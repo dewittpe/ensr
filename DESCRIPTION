@@ -15,7 +15,7 @@ Encoding: UTF-8
 URL: https://github.com/dewittpe/ensr
 LazyData: true
 Depends:
-    R (>= 3.0.2),
+    R (>= 3.5.0),
     glmnet
 Imports:
     data.table,
