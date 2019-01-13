@@ -21,7 +21,7 @@ options(qwraps2_markup = "markdown")
 
 # Rpkg : use this function in the text for format the appearance of package
 # names.  This is modeled after the BiocStyle::Rpacakge function.  The package
-# name can be passed in quotes or a bare name.  This formating is done to help
+# name can be passed in quotes or a bare name.  This formatting is done to help
 # distinguish between a package name and a function.
 Rpkg <- function(pkg) {
   pkg <- deparse(substitute(pkg))
