@@ -16,6 +16,23 @@ library(knitr)
 knitr::opts_chunk$set(collapse = TRUE)
 options(qwraps2_markup = "markdown")
 
+# Rpkg : use this function in the text for format the appearance of package
+# names.  This is modeled after the BiocStyle::Rpacakge function.  The package
+# name can be passed in quotes or a bare name.  This formating is done to help
+# distinguish between a package name and a function.
+Rpkg <- function(pkg) {
+  pkg <- deparse(substitute(pkg))
+  pkg <- gsub("\"|\'", "", pkg)
+  sprintf("*%s*", pkg)
+}
+
+# example:
+Rpkg(ensr)
+Rpkg("ensr")
+
+# NOTE: Functions should be in surrounded by backticks, e.g., the `ensr`
+# function in the `r Rpkg(ensr)` package.
+
 #'
 #' This vignette provides descriptions of the example data sets in the `r Rpkg(ensr)`
 #' package.  We provide information about how the data sets were built and also
@@ -31,7 +48,7 @@ set.seed(42)
 #/* Only load the ensr namespace if you are not running this script form the
 # data-raw directory
 if (grepl("data-raw", getwd())) {
-  source("../R/standardize.R") 
+  source("../R/standardize.R")
 } else {
 #*/
 library(ensr)
@@ -258,9 +275,9 @@ usethis::use_data(tbi, overwrite = TRUE)
 #' data sets.
 #/*
 if (grepl("data-raw", getwd())) {
-  landfill <-  fread(file = "../inst/extdata/landfill.csv", sep = ",") 
+  landfill <-  fread(file = "../inst/extdata/landfill.csv", sep = ",")
 } else {
-#*/ 
+#*/
 landfill <-
   fread(file = system.file("extdata/landfill.csv", package = "ensr"), sep = ",")
  #/*
