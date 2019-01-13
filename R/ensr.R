@@ -1,10 +1,10 @@
 #' Elastic Net SearcheR
 #'
-#' Search for the values of alpha and lambda.
+#' Search a grid of values of alpha and lambda for minimum mean CV error
 #'
 #' @inheritParams glmnet::cv.glmnet
 #' @inheritParams glmnet::glmnet
-#' @param alphas a sequence alpha values
+#' @param alphas a sequence of alpha values
 #'
 #' @export
 ensr <- function(x, y, alphas = seq(0.00, 1.00, length = 10), nlambda = 100L, standardize = TRUE, nfolds = 10L, foldid, ...) {

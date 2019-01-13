@@ -1,7 +1,7 @@
 #' Standardize
 #'
 #' Center and scale vectors by mean/standard deviation or median/IQR with the
-#' option to determine the statistics based on unique observations.
+#' option to base the standardization only on unique observations.
 #'
 #' @param x numeric data to standardize
 #' @param stats a list defining the centering and scaling statistics.
@@ -25,7 +25,7 @@
 #' standardize(xarray, margin = 0)
 #' standardize(xarray, margin = 1:2)
 #'
-#' # Standardise a data.frame
+#' # Standardize a data.frame
 #' standardize(mtcars)
 #'
 #' # a generic list object
