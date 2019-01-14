@@ -22,7 +22,7 @@ lambda_max(y, x, standardize = TRUE, alpha = 0, lmin_factor = 1e-04,
 \item{...}{other args}
 }
 \description{
-Determine the lambda_max value that would be genteraged from a call to
+Determine the lambda_max value that would be generated from a call to
 \code{\link[glmnet]{glmnet}} without making that call.
 }
 \examples{

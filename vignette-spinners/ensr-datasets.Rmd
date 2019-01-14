@@ -16,12 +16,29 @@ vignette: >
 library(knitr)
 knitr::opts_chunk$set(collapse = TRUE)
 options(qwraps2_markup = "markdown")
+
+# Rpkg : use this function in the text for format the appearance of package
+# names.  This is modeled after the BiocStyle::Rpacakge function.  The package
+# name can be passed in quotes or a bare name.  This formating is done to help
+# distinguish between a package name and a function.
+Rpkg <- function(pkg) {
+  pkg <- deparse(substitute(pkg))
+  pkg <- gsub("\"|\'", "", pkg)
+  sprintf("*%s*", pkg)
+}
+
+# example:
+Rpkg(ensr)
+Rpkg("ensr")
+
+# NOTE: Functions should be in surrounded by backticks, e.g., the `ensr`
+# function in the `r Rpkg(ensr)` package.
 ```
 
 
-This vignette provides a description for the example data sets in the ensr
-package.  Details on how the data sets were constructed are provdided along
-with extended documentation of the individual variables within the data sets.
+This vignette provides descriptions of the example data sets in the `r Rpkg(ensr)`
+package.  We provide information about how the data sets were built and also
+about each individual variable.
 
 The packages needed to constuct the data sets are:
 
@@ -39,9 +56,9 @@ library(ensr)
 
 # Traumatic Brain Injuries
 
-A synthetic data set based based on a Traumatic Brain Injury (TBI) study data
-set has been included with the ensr package.  All data points in this data
-set have been randomly generated and have no association with any real TBI
+A synthetic data set based based on a Traumatic Brain Injury (TBI) study
+ has been included with the `r Rpkg(ensr)` package.  All data points in this data
+set have been randomly generated and have no association with any real
 patient.
 
 The columns of this data set are:
@@ -51,13 +68,12 @@ The columns of this data set are:
 | `age`                     | Age of the patient, in days, at time of hospital admission                                              |
 | `female`                  | An integer flag for sex, 1 == female, 0 == male.                                                        |
 | `los`                     | Length of stay: number of days between hospital admission and discharge.
-| `pcode1`, ..., `pcode6`   | Indicator columns for the presence or absence of a procedure code sources from a trauma database.       |
-| `ncode1`, ..., `ncode6`   | Indicator columns for the presence or absence of the same procedure codes but from a billing data base. |
+| `pcode1`, ..., `pcode6`   | Indicator columns for the presence or absence of a procedure code from a billing database.              |
+| `ncode1`, ..., `ncode6`   | Indicator columns for the presence or absence of the same procedure code, but from a trauma database.  |
 | `injury1`, ..., `injury3` | Indicator columns for the presence or absence of three different types of TBI.                          |
 
 
-Construction of the synthetic data set is done by generating a data set with
-the predictor variables.
+Construction of the synthetic data set:
 
 ```{r }
 TBI_SUBJECTS <- 1323L
@@ -68,7 +84,7 @@ tbi <- data.table(age    = round(rweibull(TBI_SUBJECTS, shape = 1.9, scale = 200
 ```
 
 
-The `pcode`s and `ncode` variables are difficult to simulate.  There are 64
+The `pcode` and `ncode` variables are difficult to simulate.  There are 64
 permutations for each set.  We built two vectors with relative frequencies of
 the codes.
 
@@ -148,7 +164,7 @@ tbi <- cbind(tbi, pcodes, ncodes)
 ```
 
 
-The three injury categories are constructed via prediction form a simplified
+The three injury categories are constructed by fitting a simplified
 logistic regression model.  The regression coefficient vectors are defined
 next.
 
@@ -206,8 +222,8 @@ all.equal(digest::sha1(tbi),
 
 The file `landfill.csv` contains results from a computer simulation of water
 percolation through five layers in a landfill over one year.  The raw data
-file is provided so the end user can explore their own preprocessing of the
-data sets.
+file is provided so the end user can explore their own pre-processing of the
+data.
 
 ```{r }
 landfill <-
@@ -266,29 +282,27 @@ The set of predictors included in the data set are:
 
 ## Landfill Data Preparation
 
-The elastic net method suggests that the predictors are centered and scaled
-and in the case of multi-variable responses, that the outcomes are centered
-and scaled as well.  For calls to `glmnet` and `cv.glmnet` the argument
-`standardized = TRUE` (default) to center and scale the values.  If you have
+The elastic net method suggests that all predictors be centered and scaled.
+In the case of multi-variable responses, it is recommended that the outcomes 
+be centered and scaled as well.  For calls to `glmnet` and `cv.glmnet`, the argument
+`standardized = TRUE` (default) will center and scale the values.  If you have
 already centered and scaled the data you may prefer to set `standardized =
 FALSE`.
 
-If you need, or want, to explicitly standardize your data you will likely
-find use of the base R function `scale` is sufficient for most cases.
-However, with the landfill data the simple centering and scaling could be
-considered improper.  `scale`, will use the mean and standard deviation of
-the input, that is fine if all the values in the input are unique
-observations.  In the landfill data, however, the manner by which the
-parameters where inputted into the computer program are repeated.  Centering
-and scaling should be based on the mean and standard deviation of unique
-values.  The ensr function `standardize` will standardize a numeric vector
-based on unique values, by default, via either mean/standard deviation, or
-median/IQR.
+If you want to explicitly standardize your data, the base R function `scale` 
+is adequate for most situations. However, with the landfill data the simple 
+centering and scaling could be considered inappropriate.  
+`scale` will use the mean and standard deviation of the input. 
+However, the landfill data contains measurements with the same values.  Centering
+and scaling should be based on the mean and standard deviation of just the unique
+values.  The ensr function `standardize` will, by default, standardize a numeric vector
+based on just the unique values using either the mean and standard deviation or the
+median and interquartile range (IQR).
 
 Here is an example.  There are `r qwraps2::frmt(nrow(landfill))` rows in the
 landfill data set.  There are `r length(unique(landfill$topsoil_alpha))`
-unique values for the van Genuchten $\alpha$ value.  Here are the different
-scale and centerings:
+unique values for the van Genuchten $\alpha$ value.  Here is how the
+standardization results are affected by non-unique predictor values:
 
 ```{r }
 nrow(landfill)
@@ -317,7 +331,7 @@ all.equal(target  = scaled_topsoil_alpha_v3,
           current = scaled_topsoil_alpha_v4,
           check.attributes = FALSE)
 
-# Center and scale using the median and inner quartile range (IQR).
+# Center and scale using the median and IQR.
 scaled_topsoil_alpha_v5 <-
   as.vector(scale(landfill$topsoil_alpha,
                   center = median(unique(landfill$topsoil_alpha)),
@@ -333,7 +347,7 @@ all.equal(target  = scaled_topsoil_alpha_v5,
 ```
 
 
-For the full landfill data set we can center and scale all the columns as:
+For the full landfill data set we can center and scale all the columns using:
 
 ```{r }
 landfill <- standardize(landfill)
@@ -344,12 +358,12 @@ Note that the values used for centering and scaling are retained as
 attributes for each variable in the data set.
 
 ```{r }
-str( landfill[, 1:2] )
+str(landfill[, 1:2] )
 ```
 
 
-The `landfill` object that is generated in this vignette is the same as the
-one which you can call via `data(landfill, package = "ensr")`.
+The `landfill` object generated in this vignette is the same as the
+one generated using `data(landfill, package = "ensr")`.
 
 ```{r }
 data(landfill, package = "ensr", envir = ensr_env)

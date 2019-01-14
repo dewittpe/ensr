@@ -14,7 +14,7 @@ ensr(x, y, alphas = seq(0, 1, length = 10), nlambda = 100L,
 
 \item{y}{response \code{y} as in \code{glmnet}.}
 
-\item{alphas}{a sequence alpha values}
+\item{alphas}{a sequence of alpha values}
 
 \item{nlambda}{The number of \code{lambda} values - default is 100.}
 
@@ -35,5 +35,5 @@ ensr(x, y, alphas = seq(0, 1, length = 10), nlambda = 100L,
 \item{...}{Other arguments that can be passed to \code{glmnet}}
 }
 \description{
-Search for the values of alpha and lambda.
+Search a grid of values of alpha and lambda for minimum mean CV error
 }

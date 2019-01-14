@@ -7,9 +7,9 @@
 lambda_alpha_grid(lambdas, alphas, nlambda = 10L, lmin_factor = 1e-04)
 }
 \arguments{
-\item{lambdas}{a vector of max values for each alpha given}
+\item{lambdas}{a vector of max lambda values for each alpha given}
 
-\item{alphas}{a vector a alpha values corresponding to the max lambdas}
+\item{alphas}{a vector of alpha values corresponding to the max lambdas}
 
 \item{nlambda}{number of lambdas to generate for each alpha before creating the
 grid}

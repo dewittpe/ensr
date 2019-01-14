@@ -21,7 +21,7 @@ to use all the data in the array for the calculation of the statistics pass
 }
 \description{
 Center and scale vectors by mean/standard deviation or median/IQR with the
-option to determine the statistics based on unique observations.
+option to base the standardization only on unique observations.
 }
 \examples{
 x <- 1:100
@@ -37,7 +37,7 @@ xarray <- array(1:60, dim = c(5, 2, 6))
 standardize(xarray, margin = 0)
 standardize(xarray, margin = 1:2)
 
-# Standardise a data.frame
+# Standardize a data.frame
 standardize(mtcars)
 
 # a generic list object

@@ -39,7 +39,8 @@ Rpkg("ensr")
 #'
 #' The primary purpose of the `r Rpkg(ensr)` package is to provide methods for simultaneously searching
 #' for preferable values of $\lambda$ and $\alpha$ in elastic net regression.
-#' `r Rpkg(ensr)` is wrapped around the [`r Rpkg("glmnet")`](https://cran.r-studio.com/package=glmnet) package
+#' `r Rpkg(ensr)` is wrapped around the [`r
+#' Rpkg("glmnet")`](https://cran.r-project.org/package=glmnet) package
 #' This vignette starts with a summary of elastic net regression and its use and limitations.
 #' Examples of data set preparation follow and the vignette concludes with elastic net regression
 #' results.
@@ -482,7 +483,7 @@ do.call(cbind,
 #'
 #' Our `r Rpkg(ensr)` package is not the only approach to searching for $\labmda$ and
 #' $\alpha$. The
-#' [`r Rpkg(glmnetUtils)`](https://cran.r-progject.org/package=glmnetUtils)
+#' [`r Rpkg(glmnetUtils)`](https://cran.r-project.org/package=glmnetUtils)
 #' [@glmnetUtils] is the most notable comparative package.  We encourage the
 #' reader to explore the `r Rpkg(glmnetUtils)` package and determine if it meets your
 #' needs.
