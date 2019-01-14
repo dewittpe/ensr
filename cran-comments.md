@@ -1,11 +1,12 @@
+# Version 0.1.0
+
 ## Test Envirionments
 
 * Local Debian 9.6
   * R 3.5.2
-  * R devel
+  * R devel (to be 3.6.0)
 
 * Ubuntu 14.04
-  * R oldrel
   * R release
   * R devel
 
@@ -16,10 +17,10 @@ There were no ERRORs or WARNGINGs.
 
 There was one 1 NOTE:
 
-* checking dependencies in R code ... NOTE
-  Namespace in Imports field not imported from 'R6'
+* checking CRAN incoming feasibility ... NOTE
+Maintainer: ‘Peter DeWitt <peter.dewitt@ucdenver.edu>’
 
-  R6 is a build-time dependency.
+New submission
 
 ## Downstream dependency
 There are no downstream dependencies.
