@@ -34,6 +34,8 @@ library(ensr)
 library(data.table)
 library(ggplot2)
 library(ggforce)
+library(doMC)
+registerDoMC(cores = max(c(detectCores() - 2L, 1L)))
 options(datatable.print.topn  = 3L,
         datatable.print.nrows = 3L)
 
@@ -124,7 +126,7 @@ data(landfill, package = "ensr")
 #'
 #' ## Univariate Response
 #'
-#' A call to `ensr` produces a search for a combination of $\lambda$ and $\alpha$ 
+#' A call to `ensr` produces a search for a combination of $\lambda$ and $\alpha$
 #' that result in the lowest cross validation error.  The arguments to
 #' `ensr` are the same as those made to `cv.glmnet` with the addition of
 #' `alphas`, a sequence of $\alpha$ values to use.  Please note that `ensr` will
@@ -164,7 +166,7 @@ str(preferable(ensr_obj), max.level = 1L)
 #' `ensr_summary` used to select this preferable model.
 #'
 #' Because the output of `preferable` inherits the same class as an object
-#' returned from a call to `glmnet::glmnet` the same methods can be used. 
+#' returned from a call to `glmnet::glmnet` the same methods can be used.
 #' Plotting methods are one example:
 par(mfrow = c(1, 3))
 plot(preferable(ensr_obj), xvar = "norm")
@@ -202,7 +204,7 @@ summary(ensr_obj)[, .SD[cvm == min(cvm)], by = alpha][l_index %in% c(13, 16)]
 
 #'
 #' The difference in the mean cross validation error between these two results
-#' is very small and may not be meaningful. However, the number of non-zero (`nzero`) 
+#' is very small and may not be meaningful. However, the number of non-zero (`nzero`)
 #' coefficients is quite different.  With a very small
 #' increase in the mean cross validation error, one more variable has its
 #' regression coefficient shrunk to zero.  If parsimony is your primary
@@ -283,7 +285,7 @@ qwraps2::qable(
 #'
 #' ## Cross Validation Issues
 #'
-#' Cross-validation results may be dependent on the `foldid` randomly assigned to 
+#' Cross-validation results may be dependent on the `foldid` randomly assigned to
 #' each record. This is because some records may always be
 #' considered together in either the training or validation data sets.  For example, three
 #' randomly generated vectors for 10-fold cross-validation are generated below
@@ -489,7 +491,7 @@ do.call(cbind,
 #' difficult to deal with then factors with three or more possible values.
 #'
 #' The second major difference between `r Rpkg(ensr)` and `r Rpkg(glmnetUtils)` is that
-#'`r Rpkg(ensr)` builds a $\labmda$-$\alpha$ grid and evaluates 
+#'`r Rpkg(ensr)` builds a $\labmda$-$\alpha$ grid and evaluates
 #' `glmnet::cv.glmnet` at least twice for each value of $\lambda.$
 #' For each value of $\lambda$, at least two values of
 #' $\alpha$ will be considered.  `r Rpkg(glmnetUtils)` only uses the default

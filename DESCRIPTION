@@ -30,6 +30,7 @@ Suggests:
     magrittr,
     microbenchmark,
     qwraps2 (>= 0.4.0),
+    R.rsp,
     rmarkdown
 RoxygenNote: 6.1.1
-VignetteBuilder: knitr
+VignetteBuilder: R.rsp
