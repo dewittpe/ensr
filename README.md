@@ -1,5 +1,4 @@
-ensr: Elastic Net SearcheR <img src="hexsticker/ensr.png" width=173 height=200 align="right"/>
-===============================================================================
+# ensr: Elastic Net SearcheR <img src="man/figures/ensr.png" width=173 height=200 align="right"/>
 
 [![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/ensr)](https://cran.r-project.org/package=ensr)
 [![Build Status](https://travis-ci.com/dewittpe/ensr.svg?branch=master)](https://travis-ci.com/dewittpe/ensr)
@@ -8,7 +7,7 @@ Elastic Net regression models combine both the L1 and L2 penalties of lasso and
 ridge regression.  There are two penalty terms, lambda and alpha.  Lambda is a
 complexity parameter and alpha is a balance between lasso and ridge.
 
-The `cv.glmnet` function in [`glmnet`](https://cran.r-project.org/packag=glmnet)
+The `cv.glmnet` function in [`glmnet`](https://cran.r-project.org/package=glmnet)
 will perform cross validation to find the value of lambda for a given value of
 alpha.  `cv.glmnet` does not search over values of alpha.  The ensr package
 builds a grid of alpha and lambda values and, using cross-validation, suggests

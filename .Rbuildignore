@@ -10,3 +10,4 @@
 ^.*\.tar\.gz$
 ^examples/*$
 ^cran-comments.md$
+^hexsticker/*$
