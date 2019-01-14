@@ -1,7 +1,7 @@
 sudo: false
 language: r
 r:
-  - oldrel
+#  - oldrel  # ensr depends on R >= 3.5.0
   - release
   - devel
 
