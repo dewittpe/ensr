@@ -29,7 +29,7 @@ Suggests:
     knitr,
     magrittr,
     microbenchmark,
-    qwraps2,
+    qwraps2 (>= 0.4.0),
     rmarkdown
 RoxygenNote: 6.1.1
 VignetteBuilder: knitr

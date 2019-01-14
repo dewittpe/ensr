@@ -17,24 +17,8 @@ vignette: >
 ````{r label=setup, include = FALSE}
 library(knitr)
 knitr::opts_chunk$set(collapse = TRUE, fig.width = 6, fig.height = 4)
+library(qwraps2)
 options(qwraps2_markup = "markdown")
-
-# Rpkg : use this function in the text for format the appearance of package
-# names.  This is modeled after the BiocStyle::Rpacakge function.  The package
-# name can be passed in quotes or a bare name.  This formatting is done to help
-# distinguish between a package name and a function.
-Rpkg <- function(pkg) {
-  pkg <- deparse(substitute(pkg))
-  pkg <- gsub("\"|\'", "", pkg)
-  sprintf("*%s*", pkg)
-}
-
-# example:
-Rpkg(ensr)
-Rpkg("ensr")
-
-# NOTE: Functions should be in surrounded by backticks, e.g., the `ensr`
-# function in the `r Rpkg(ensr)` package.
 ````
 
 
