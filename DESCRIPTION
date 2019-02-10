@@ -1,6 +1,6 @@
 Package: ensr
 Title: Elastic Net SearcheR
-Version: 0.1.0
+Version: 0.1.0.9000
 Authors@R: c(
     person("Peter", "DeWitt", , "peter.dewitt@ucdenver.edu", role = c("aut", "cre")),
     person("Tell",  "Bennett", , "tell.bennett@ucdenver.edu", role = c("ctb"))
