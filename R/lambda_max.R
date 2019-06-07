@@ -61,16 +61,21 @@
 #' @export
 lambda_max <- function(y, x, standardize = TRUE, alpha = 0, lmin_factor = 0.0001, ...) {
 
-  a0 <- sapply(lapply(alpha, all.equal, 0), isTRUE)
-  if (any(a0)) alpha[a0] <- lmin_factor
+  #   a0 <- sapply(lapply(alpha, all.equal, 0), isTRUE)
+  #   if (any(a0)) alpha[a0] <- lmin_factor
+  # 
+  #   if (standardize) {
+  #     x <- apply(x, 2, scale)
+  #   }
+  # 
+  #   lmfit <- stats::lm(y ~ x)
 
-  if (standardize) {
-    x <- apply(x, 2, scale)
-  }
+  # max(abs(t(x) %*% (stats::residuals(lmfit) + stats::predict(lmfit, type = "terms")))) / (alpha * nrow(x))
 
-  lmfit <- stats::lm(y ~ x)
-
-  max(abs(t(x) %*% (stats::residuals(lmfit) + stats::predict(lmfit, type = "terms")))) / (alpha * nrow(x))
+  sapply(alpha,
+         function(a) {
+           max(glmnet::glmnet(x = x, y = y, standardize = standardize, alpha = a, nlambda = 4L, ...)$lambda)
+         })
 
 }
 

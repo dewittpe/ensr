@@ -1,5 +1,5 @@
 library(glmnet)
-library(ensr)
+library(ensr)  # version 0.1.0.9000
 
 set.seed(2785)
 
@@ -31,11 +31,10 @@ ensr_obj <- ensr(x = x, y = mydata$y,  family = "binomial")
 #   ‘+’ not meaningful for factors
 
 ensr_obj <- ensr(x = x, y = mydata$yb, family = "binomial")
-# There were 50 or more warnings (use warnings() to see the first 50)
-
-summary(warnings())
-# 50 identical warnings:
-# In regularize.values(x, y, ties, missing(ties)) : collapsing to unique 'x' values
+# summary(warnings())
+plot(ensr_obj)
+preferable(ensr_obj)
+summary(ensr_obj)
 
 
 
@@ -43,7 +42,7 @@ summary(warnings())
 
 glmmod <- glmnet(xb , y=mydata$yb, alpha=1, family = "binomial")
 
-ensr_obj <- ensr(xb, y=mydata$yb, family = "binomial")
+ensr_obj <- ensr(x = x, y=mydata$yb, family = "binomial")
 # Error in lm.fit(x, y, offset = offset, singular.ok = singular.ok, ...) :
 #   0 (non-NA) cases
 
