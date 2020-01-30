@@ -217,8 +217,8 @@ plot(ensr_obj)
 #' In this example, we add the black-and-white theme and use `ggforce::facet_zoom` to zoom in
 #' on a section of the graphic:
 plot(ensr_obj) +
-  theme_minimal() +
-  facet_zoom(x = 0.50 < alpha & alpha < 0.90, y = 5e-4 < lambda & lambda < 1.5e-3)
+  theme_minimal()
+  # facet_zoom(x = 0.50 < alpha & alpha < 0.90, y = 5e-4 < lambda & lambda < 1.5e-3)
 
 #'
 #' In this figure we see the minimum mean cross validation error occurs within

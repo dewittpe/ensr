@@ -126,7 +126,7 @@ plot.ensr <- function(x, type = c(1), ...) {
 #' @param object a \code{ensr} object
 #' @param ... other arguments passed along to \code{predict}
 #'
-#' @seealso \code{\link[glmnet]{predict}}
+#' @seealso \code{\link[glmnet]{predict.glmnet}}
 #'
 #' @name predict
 #' @export
