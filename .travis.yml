@@ -1,7 +1,6 @@
-sudo: false
 language: r
 r:
-#  - oldrel  # ensr depends on R >= 3.5.0
+#  - oldrel  # ensr depends on R >= 3.6.0
   - release
   - devel
 
@@ -12,9 +11,13 @@ addons:
 
 warnings_are_errors: true
 
+install:
+  - Rscript -e 'install.packages("devtools", repos = "https://cran.rstudio.com")'
+  - Rscript -e 'devtools::install_dev_deps()'
+
 script:
-  - travis_wait 30 make all
-  - travis_wait 30 make check
+  - make all
+  - make check
 
 # whitelist
 branches:
