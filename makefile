@@ -35,7 +35,10 @@ $(PKG_NAME)_$(PKG_VERSION).tar.gz: .document.Rout $(TESTS) $(PKG_ROOT)/DESCRIPTI
 	R CMD build --no-resave-data --md5 $(build-options) $(PKG_ROOT)
 
 check: $(PKG_NAME)_$(PKG_VERSION).tar.gz
-	R CMD check $(PKG_NAME)_$(PKG_VERSION).tar.gz
+	R --vanilla --quiet -e 'checks <- devtools::check(document = FALSE, args = "--no-tests")'\
+		-e 'if(!identical(checks[["errors"]], character(0))) stop("Check with Errors")'\
+		-e 'if(!identical(checks[["warnings"]], character(0))) stop("Check with Warnings")'\
+		-e 'if(!identical(checks[["notes"]], character(0))) stop("Check with Notes")'
 
 install: $(PKG_NAME)_$(PKG_VERSION).tar.gz
 	R CMD INSTALL $(PKG_NAME)_$(PKG_VERSION).tar.gz

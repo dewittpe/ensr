@@ -1,7 +1,10 @@
 # ensr: Elastic Net SearcheR <img src="man/figures/ensr.png" width=173 height=200 align="right"/>
 
-[![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/ensr)](https://cran.r-project.org/package=ensr)
 [![Build Status](https://travis-ci.com/dewittpe/ensr.svg?branch=master)](https://travis-ci.com/dewittpe/ensr)
+
+[![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/ensr)](https://cran.r-project.org/package=ensr)
+[![CRAN RStudio mirror downloads](http://cranlogs.r-pkg.org/badges/ensr)](http://www.r-pkg.org/pkg/ensr)
+[![CRAN RStudio mirror downloads](http://cranlogs.r-pkg.org/badges/grand-total/ensr)](http://www.r-pkg.org/pkg/ensr)
 
 Elastic Net regression models combine both the L1 and L2 penalties of lasso and
 ridge regression.  There are two penalty terms, lambda and alpha.  Lambda is a
@@ -22,21 +25,26 @@ vignette("ensr-examples", package = "ensr")
 
 ## Installing ensr
 
-ensr is not currently on [CRAN](https://cran.r-project.org/). You can install
-via github or after cloning the repo.
+ensr is on [CRAN](https://cran.r-project.org/package=ensr).
 
-There are several ways you can install ensr.  If you are working on a Windows
-machine you will need to have [Rtools](https://cran.r-project.org/bin/windows/Rtools/) installed.
+```r
+install.packages('ensr', repos = 'https://cran.rstudio.com')
+```
 
-### Development version from Github
+Install the development version from github:
 
-Within an active R session evaluate the following:
 ```r
 if ('remotes' %in% rownames(installed.packages())) {
   install.packages('remotes', repos = "https://cran.rstudio.com")
 }
 remotes::install_github("dewittpe/ensr", build_opts = c("--no-resave-data"))
 ```
+
+## Development version from Github
+
+There are several ways you can install ensr.  If you are working on a Windows
+machine you will need to have [Rtools](https://cran.r-project.org/bin/windows/Rtools/) installed.
+
 
 ### Clone and Install
 There are detailed instructions for cloning the repo in the `CONTRIBUTING.md`
