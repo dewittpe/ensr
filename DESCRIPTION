@@ -1,6 +1,6 @@
 Package: ensr
 Title: Elastic Net SearcheR
-Version: 0.1.0
+Version: 0.1.0.9000
 Authors@R: c(
     person("Peter", "DeWitt", , "peter.dewitt@ucdenver.edu", role = c("aut", "cre")),
     person("Tell",  "Bennett", , "tell.bennett@ucdenver.edu", role = c("ctb"))
@@ -17,8 +17,8 @@ Encoding: UTF-8
 URL: https://github.com/dewittpe/ensr
 LazyData: true
 Depends:
-    R (>= 3.5.0),
-    glmnet
+    R (>= 3.6.0),
+    glmnet (>= 3.0)
 Imports:
     data.table,
     ggplot2
@@ -32,5 +32,5 @@ Suggests:
     qwraps2 (>= 0.4.0),
     R.rsp,
     rmarkdown
-RoxygenNote: 6.1.1
+RoxygenNote: 7.0.2
 VignetteBuilder: R.rsp
