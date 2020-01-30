@@ -1,8 +1,6 @@
 #'---
 #'title: "Elastic Net SearcheR Examples"
-#'subtitle: "ensr package version `r packageVersion('ensr')`"
 #'author: "Peter E. DeWitt"
-#'date: "`r Sys.Date()`"
 #'output:
 #'  rmarkdown::html_vignette:
 #'    toc: true
@@ -14,6 +12,11 @@
 #'  %\VignetteEncoding{UTF-8}
 #'---
 
+#'
+#'ensr package version
+{{ packageVersion('ensr') }}
+#'
+
 #+ label=setup, include = FALSE
 library(knitr)
 knitr::opts_chunk$set(collapse = TRUE, fig.width = 6, fig.height = 4)
@@ -21,13 +24,16 @@ library(qwraps2)
 options(qwraps2_markup = "markdown")
 
 #'
-#' The primary purpose of the `r Rpkg(ensr)` package is to provide methods for simultaneously searching
+#' The primary purpose of the
+{{ qwraps2::Rpkg(ensr) }}
+#' package is to provide methods for simultaneously searching
 #' for preferable values of $\lambda$ and $\alpha$ in elastic net regression.
-#' `r Rpkg(ensr)` is wrapped around the [`r
-#' Rpkg("glmnet")`](https://cran.r-project.org/package=glmnet) package
-#' This vignette starts with a summary of elastic net regression and its use and limitations.
-#' Examples of data set preparation follow and the vignette concludes with elastic net regression
-#' results.
+{{ qwraps2::Rpkg(ensr) }}
+#' is wrapped around the
+{{ qwraps2::CRANpkg(ensr) }}
+#' package.  This vignette starts with a summary of elastic net regression and
+#' its use and limitations.  Examples of data set preparation follow and the
+#' vignette concludes with elastic net regression results.
 #'
 #+label="load_and_attach_ensr"
 library(ensr)
@@ -41,8 +47,9 @@ options(datatable.print.topn  = 3L,
 
 #'
 # /*
-# {{{ ----------------- Section: Elastic Net Regression -----------------------
+# Section: Elastic Net Regression ----------------------------------------- {{{
 # */
+#'
 #' # Elastic Net Regression
 #'
 #' Elastic Net Regression [@friedman2010regularization] is a penalized linear
@@ -61,64 +68,83 @@ options(datatable.print.topn  = 3L,
 #' \alpha = 1 \right).$
 #'
 #' Ridge regression does not often shrink coefficients to zero and contribute to
-#' the parsimony of models. One potential benefit of elastic net regression is that, like the LASSO,
-#' it can be used to perform variable selection by shrinking coefficients to zero.
-#' Compared to LASSO, one potential benefit of elastic net regression is that it will reproducibly return
-#' the same set of non-zero coefficients when some predictors are highly correlated.
-#' LASSO, $\alpha = 1,$ may return different sets of non-zero coefficients when highly correlated
-#' predictors are in the model.
+#' the parsimony of models. One potential benefit of elastic net regression is
+#' that, like the LASSO, it can be used to perform variable selection by
+#' shrinking coefficients to zero.  Compared to LASSO, one potential benefit of
+#' elastic net regression is that it will reproducibly return the same set of
+#' non-zero coefficients when some predictors are highly correlated.  LASSO,
+#' $\alpha = 1,$ may return different sets of non-zero coefficients when highly
+#' correlated predictors are in the model.
 #'
-#' Compared to other machine learning approaches, a potential benefit of elastic net regression
-#' is that the $\beta$ vector is easily interpretable and can be implemented in almost any downstream computational
-#' pipeline. More flexible machine learning models such as gradient boosting machines may
-#' be able to fit data more accurately, but they are extremely difficult to export to other tools.
+#' Compared to other machine learning approaches, a potential benefit of elastic
+#' net regression is that the $\beta$ vector is easily interpretable and can be
+#' implemented in almost any downstream computational pipeline. More flexible
+#' machine learning models such as gradient boosting machines may be able to fit
+#' data more accurately, but they are extremely difficult to export to other
+#' tools.
 #'
-#' The `cv.glmnet` call from the `r Rpkg(glmnet)` package is widely used to fit elastic
-#' net regression models. However, the current implementation of `cv.glmnet` requires that the value(s)
-#' of $\alpha$ be specified by the user (see "Details" in `help("cv.glmnet")`).
-#' We designed the `r Rpkg(ensr)` package to fill this gap by simultaneously searching for a
-#' preferable set of $\lambda$ and $\alpha$ values. `r Rpkg(ensr)` also provides additional
-#' plotting methods to facilitate visual identification of the best choice for a given project.
+#' The
+{{ qwraps2::backtick(cv.glmnet)}}
+#' call from the
+{{ qwraps2::CRANpkg(glmnet) }}
+#' package is widely used to fit elastic net regression models. However, the
+#' current implementation of
+{{ qwraps2::backtick(cv.glmnet)}}
+#' requires that the value(s) of $\alpha$ be specified by the user (see
+#' "Details" in
+{{ qwraps2::backtick(help("cv.glmnet")) }}
+#' ).  We designed the
+{{ qwraps2::CRANpkg(ensr) }}
+#' package to fill this gap by simultaneously searching for a
+#' preferable set of $\lambda$ and $\alpha$ values.
+{{ qwraps2::CRANpkg(ensr) }}
+#' also provides additional plotting methods to facilitate visual identification
+#' of the best choice for a given project.
 #'
 # /*
-# --------------------------------------------------------------------------}}}
+# -------------------------------------------------------------------------- }}}
 # */
 # /*
-# {{{ ------------------------ Section: Data Sets -----------------------------
+# Section: Data Sets ------------------------------------------------------- {{{
 # */
 #' # Data Sets
 #'
-#' Two data sets are provided in the `r Rpkg(ensr)` package for use in examples.
+#' Two data sets are provided in the
+{{ qwraps2::Rpkg(ensr) }}
+#' package for use in examples.
 #'
-#' 1. `tbi` is a synthetic data set with which traumatic brain injury can be
-#'  classified into three different types using a set of predictors.
+#' 1.
+{{ qwraps2::backtick(tbi)}}
+#' is a synthetic data set with which traumatic brain injury can be classified
+#' into three different types using a set of predictors.
 #'
-#' 2. `landfill` is a synthetic data set similar to those generated by
-#' computer models of water percolating through landfill.
+#' 2.
+{{ qwraps2::backtick(landfill)}}
+#' is a synthetic data set similar to those generated by computer models of
+#' water percolating through landfill.
 #'
 #' More information about each of these data sets is
 #' provided in the "ensr-datasets" vignette:
+{{ paste0(qwraps2::backtick(vignette("ensr-datasets", package = "ensr")), ".") }}
 #'
-#'```{r, eval = FALSE}
-#'vignette("ensr-datasets", package = "ensr")
-#'```
-data(tbi, package = "ensr")
-data(landfill, package = "ensr")
+#+ label = "load_data"
+data(tbi, landfill., package = "ensr")
 
 # /*
-# --------------------------------------------------------------------------}}}
+# -------------------------------------------------------------------------- }}}
 # */
+#'
 # /*
-# {{{ ------------- Section: Searching for lambda and alpha -------------------
+# Section: Searching for lambda and alpha ---------------------------------- {{{
 # */
 #'
 #' # Searching for $\lambda$ and $\alpha$
 #'
-#' The optimal pair of $\lambda$ and $\alpha$ is likely project-specific.
-#' Some defaults are provided but the user is encouraged to carefully consider,
-#' for example, the optimal balance between parsimony and model error for their project.
-#' For example, model error that is lower by 0.1\% at the expense of 3 additional parameters
-#' may or may not be desirable.
+#' The optimal pair of $\lambda$ and $\alpha$ is likely project-specific.  Some
+#' defaults are provided but the user is encouraged to carefully consider, for
+#' example, the optimal balance between parsimony and model error for their
+#' project.  For example, model error that is lower by 0.1\% at the expense of 3
+#' additional parameters may or may not be desirable.
 #'
 # /*
 # {{{ ----------------- Subsection: Univariate Response ------------------------
@@ -126,7 +152,9 @@ data(landfill, package = "ensr")
 #'
 #' ## Univariate Response
 #'
-#' A call to `ensr` produces a search for a combination of $\lambda$ and $\alpha$
+#' A call to
+{{ qwraps2::backtick(ensr) }}
+#' produces a search for a combination of $\lambda$ and $\alpha$
 #' that result in the lowest cross validation error.  The arguments to
 #' `ensr` are the same as those made to `cv.glmnet` with the addition of
 #' `alphas`, a sequence of $\alpha$ values to use.  Please note that `ensr` will
