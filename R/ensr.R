@@ -160,6 +160,14 @@ coef.ensr <- function(object, ...) {
 #'
 #' @param object an ensr object
 #' @param ... not currently used.
+#'
+#' @return a glmnet object associated with the smallest cvm.  If the min cvm is
+#' not unique, then the model with the smallest cvm with largest alpha value is
+#' returned.  If that is not unique, then is all the "preferable" models have
+#' zero non-zero coefficients the model with the largest lambda and largest
+#' alpha value is returned.  Lastly, if a unquie model is still not identified
+#' an error will be thrown.
+#'
 #' @export
 preferable <- function(object, ...) {
   UseMethod("preferable")
@@ -172,7 +180,17 @@ preferable.ensr <- function(object, ...) {
   sm <- sm[sm[["cvm"]] == min(sm[["cvm"]]), ]
 
   if (nrow(sm) > 1L) {
-    sm <- sm[sm[['alpha']] == max(sm[['alpha']])]
+    sm <- sm[sm[['alpha']] == max(sm[['alpha']]), ]
+  }
+
+  if (nrow(sm) > 1L) {
+    if (all(sm$nzero == 0)) {
+      warning("Preferable model has zero non-zero coefficients.")
+      sm <- sm[1, ]
+    } else {
+      print(sm)
+      stop("Preferable model is not unique")
+    }
   }
 
   model_idx <- sm$l_index
