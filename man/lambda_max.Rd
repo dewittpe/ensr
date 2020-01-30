@@ -4,8 +4,7 @@
 \alias{lambda_max}
 \title{Lambda Max}
 \usage{
-lambda_max(y, x, standardize = TRUE, alpha = 0, lmin_factor = 1e-04,
-  ...)
+lambda_max(y, x, standardize = TRUE, alpha = 0, lmin_factor = 1e-04, ...)
 }
 \arguments{
 \item{y}{the response vector}

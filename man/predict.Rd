@@ -25,3 +25,6 @@ attempted to be passed via \code{...}.  The value of \code{s} that is passed
 to \code{glmnet::predict} is determined by the value of \code{lambda.min} or
 \code{lambda.1se} found from a call to \code{\link{preferable}}.
 }
+\seealso{
+\code{\link[glmnet]{predict}}
+}

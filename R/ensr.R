@@ -84,17 +84,17 @@ plot.ensr_summary <- function(x, type = c(1), ...) {
   }
 
   if (2 %in% type) {
-    x2 <- data.table::copy(x) 
+    x2 <- data.table::copy(x)
     x2 <- data.table::rbindlist(lapply(unique(x2$nzero), function(i) {
                                          x3 <- subset(x2, x2$nzero == i)
                                          subset(x3, x3$cvm == min(x3$cvm))
              }))
 
-    g2 <- 
+    g2 <-
       ggplot2::ggplot(x2) +
       ggplot2::aes_string(x = "nzero", y = "cvm") +
       ggplot2::geom_line() +
-      ggplot2::geom_point() 
+      ggplot2::geom_point()
   }
 
   if (all( c(1, 2) %in% type)) {
@@ -105,7 +105,7 @@ plot.ensr_summary <- function(x, type = c(1), ...) {
     g2
   } else {
     stop("Unknown plot type.")
-  } 
+  }
 }
 
 #' @export
@@ -123,9 +123,11 @@ plot.ensr <- function(x, type = c(1), ...) {
 #' to \code{glmnet::predict} is determined by the value of \code{lambda.min} or
 #' \code{lambda.1se} found from a call to \code{\link{preferable}}.
 #'
-#' @inheritParams glmnet::predict.elnet
 #' @param object a \code{ensr} object
 #' @param ... other arguments passed along to \code{predict}
+#'
+#' @seealso \code{\link[glmnet]{predict}}
+#'
 #' @name predict
 #' @export
 predict.ensr <- function(object, ...) {

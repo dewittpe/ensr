@@ -4,8 +4,12 @@
 \alias{standardize}
 \title{Standardize}
 \usage{
-standardize(x, stats = list(center = "mean", scale = "sd"),
-  use_unique = TRUE, margin)
+standardize(
+  x,
+  stats = list(center = "mean", scale = "sd"),
+  use_unique = TRUE,
+  margin
+)
 }
 \arguments{
 \item{x}{numeric data to standardize}
