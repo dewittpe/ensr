@@ -5,9 +5,10 @@
 #' @inheritParams glmnet::cv.glmnet
 #' @inheritParams glmnet::glmnet
 #' @param alphas a sequence of alpha values
+#' @param envir environment in which to evaluate a cv.glmnet call
 #'
 #' @export
-ensr <- function(x, y, alphas = seq(0.00, 1.00, length = 10), nlambda = 100L, standardize = TRUE, nfolds = 10L, foldid, ...) {
+ensr <- function(x, y, alphas = seq(0.00, 1.00, length = 10), nlambda = 100L, standardize = TRUE, nfolds = 10L, foldid, envir = parent.frame(), ...) {
 
   # build a single set of folds
   if (missing(foldid)) {
@@ -27,7 +28,7 @@ ensr <- function(x, y, alphas = seq(0.00, 1.00, length = 10), nlambda = 100L, st
                    function(la) {
                      cl$alpha <- la$a[1]
                      cl$lambda <- la$l
-                     eval(as.call(cl))
+                     eval(as.call(cl), envir = envir)
                    })
 
   names(models) <- NULL

@@ -6,6 +6,9 @@
   cvm and return a single value (with warning) or and error is no unique model
   is identified. (#10)
 
+* `envir` added to `ensr` to allow for `ensr` calls to be made within other
+  functions.
+
 # Verion 0.1.0
 
 Initial CRAN release

@@ -13,6 +13,7 @@ ensr(
   standardize = TRUE,
   nfolds = 10L,
   foldid,
+  envir = parent.frame(),
   ...
 )
 }
@@ -38,6 +39,8 @@ large datasets. Smallest value allowable is \code{nfolds=3}}
 \item{foldid}{an optional vector of values between 1 and \code{nfold}
 identifying what fold each observation is in. If supplied, \code{nfold} can
 be missing.}
+
+\item{envir}{environment in which to evaluate a cv.glmnet call}
 
 \item{...}{Other arguments that can be passed to \code{glmnet}}
 }
