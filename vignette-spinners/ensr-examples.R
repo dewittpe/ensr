@@ -216,9 +216,16 @@ plot(ensr_obj)
 #' The `ensr` `plot` method produces a `ggplot` object and thus can be customized.
 #' In this example, we add the black-and-white theme and use `ggforce::facet_zoom` to zoom in
 #' on a section of the graphic:
+#+ eval = FALSE
+# /*
+if (FALSE) {
+# */
 plot(ensr_obj) +
-  theme_minimal()
-  # facet_zoom(x = 0.50 < alpha & alpha < 0.90, y = 5e-4 < lambda & lambda < 1.5e-3)
+  theme_minimal() +
+  facet_zoom(x = 0.50 < alpha & alpha < 0.90, y = 5e-4 < lambda & lambda < 1.5e-3)
+# /*
+}
+# */
 
 #'
 #' In this figure we see the minimum mean cross validation error occurs within
@@ -365,6 +372,10 @@ cbind(coef(ensr_obj_1), coef(ensr_obj_2), coef(ensr_obj_3))
 #' To illustrate these options we will run `ensr` five times: three univariate
 #' models, one multinomial model with `type.multinomial` set to the default
 #' "ungrouped," and one grouped multinomial model.
+#+ eval = FALSE
+# /* Omit the multivar section until #14 is fixed.
+if (FALSE) {
+# */
 ymat_1 <- matrix(tbi$injury1, ncol = 1)
 ymat_2 <- matrix(tbi$injury2, ncol = 1)
 ymat_3 <- matrix(tbi$injury3, ncol = 1)
@@ -411,7 +422,7 @@ fit_123_grouped <-
 #' ungrouped, it appears that the preferable $\alpha$ is similar to the univariate
 #' fits.
 #'
-#+ fig.width = 8, fig.height = 8
+#+ fig.width = 8, fig.height = 8, eval = FALSE
 gridExtra::grid.arrange(plot(fit_1) + ggplot2::ggtitle("Fit 1"),
                         plot(fit_2) + ggplot2::ggtitle("Fit 2"),
                         plot(fit_3) + ggplot2::ggtitle("Fit 3"),
@@ -422,6 +433,7 @@ gridExtra::grid.arrange(plot(fit_1) + ggplot2::ggtitle("Fit 1"),
 
 #'
 #' The `summary` model output:
+#+ eval = FALSE
 all_summaries <-
   rbindlist(list(summary(fit_1),
                  summary(fit_2),
@@ -434,10 +446,12 @@ all_summaries[, fit := factor(fit, 1:5, c("Fit 1", "Fit 2", "Fit 3", "Fit 123 Un
 
 #'
 #' The models with the lowest mean cross validation error are:
+#+ eval = FALSE
 all_summaries[, .SD[cvm == min(cvm)], by = fit]
 
 #'
 #'
+#+ eval = FALSE
 ggplot(
        all_summaries[, .SD[cvm == min(cvm)], by = c("fit", "nzero")]
        ) +
@@ -452,6 +466,7 @@ ggplot(
 #'
 #' Here are the models with the lowest
 #' mean cross validation error and eight non-zero coefficients:
+#+ eval = FALSE
 pref_models <-
   all_summaries[nzero == 8,
                 .SD[cvm == min(cvm)],
@@ -461,6 +476,7 @@ pref_models
 #'
 #' Let's look at the coefficients for these models, starting with the three
 #' univariate models
+#+ eval = FALSE
 cbind(
       coef(fit_1[[pref_models$l_index[1]]], s = pref_models$lambda[1])
       ,
@@ -471,14 +487,19 @@ cbind(
 
 #'
 #' The following are the non-zero coefficients for the ungrouped models.
+#+ eval = FALSE
 do.call(cbind,
         coef(fit_123_ungrouped[[pref_models$l_index[4]]], s = pref_models$lambda[4]))
 
 #'
 #' The grouped results are:
+#+ eval = FALSE
 do.call(cbind,
         coef(fit_123_grouped[[pref_models$l_index[5]]], s = pref_models$lambda[5]))
 
+# /* end of the if (FALSE) to omit the multivariate section
+}
+# */
 #'
 #' `ensr` can also analyze multivariate Gaussian responses.
 #' See the documentation `help("glmnet", package = "glmnet")` for details.

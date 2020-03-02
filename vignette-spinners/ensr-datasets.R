@@ -29,10 +29,11 @@ library(qwraps2)
 library(digest)
 set.seed(42)
 
-#/* Only load the ensr namespace if you are not running this script form the
-# data-raw directory
-if (grepl("data-raw", getwd())) {
-  source("../R/standardize.R")
+#/* if interactive, i.e., if active development, use devtools to load the
+#package.  Otherwise, and as will show in the vignette, load and attache the
+#ensr namespace
+if (interactive()) {
+  devtools::load_all()
 } else {
 #*/
 library(ensr)
@@ -239,7 +240,7 @@ cat("
 #'
 \"tbi\"
 ",
-file = "../R/tbi.R")
+file = "./R/tbi.R")
 
 usethis::use_data(tbi, overwrite = TRUE)
 }
@@ -259,7 +260,7 @@ usethis::use_data(tbi, overwrite = TRUE)
 #' data.
 #/*
 if (grepl("data-raw", getwd())) {
-  landfill <-  fread(file = "../inst/extdata/landfill.csv", sep = ",")
+  landfill <-  fread(file = "./inst/extdata/landfill.csv", sep = ",")
 } else {
 #*/
 landfill <-
@@ -319,16 +320,16 @@ regex_names <- function(pattern) {
 #' ## Landfill Data Preparation
 #'
 #' The elastic net method suggests that all predictors be centered and scaled.
-#' In the case of multi-variable responses, it is recommended that the outcomes 
+#' In the case of multi-variable responses, it is recommended that the outcomes
 #' be centered and scaled as well.  For calls to `glmnet` and `cv.glmnet`, the argument
 #' `standardized = TRUE` (default) will center and scale the values.  If you have
 #' already centered and scaled the data you may prefer to set `standardized =
 #' FALSE`.
 #'
-#' If you want to explicitly standardize your data, the base R function `scale` 
-#' is adequate for most situations. However, with the landfill data the simple 
-#' centering and scaling could be considered inappropriate.  
-#' `scale` will use the mean and standard deviation of the input. 
+#' If you want to explicitly standardize your data, the base R function `scale`
+#' is adequate for most situations. However, with the landfill data the simple
+#' centering and scaling could be considered inappropriate.
+#' `scale` will use the mean and standard deviation of the input.
 #' However, the landfill data contains measurements with the same values.  Centering
 #' and scaling should be based on the mean and standard deviation of just the unique
 #' values.  The ensr function `standardize` will, by default, standardize a numeric vector
@@ -423,7 +424,7 @@ cat("
 #'
 \"landfill\"
 ",
-file = "../R/landfill.R")
+file = "./R/landfill.R")
 
 usethis::use_data(landfill, overwrite = TRUE)
 }
