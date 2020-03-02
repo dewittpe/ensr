@@ -123,7 +123,6 @@ plot.ensr <- function(x, type = c(1), ...) {
 #' to \code{glmnet::predict} is determined by the value of \code{lambda.min} or
 #' \code{lambda.1se} found from a call to \code{\link{preferable}}.
 #'
-#' @inheritParams glmnet::predict.elnet
 #' @param object a \code{ensr} object
 #' @param ... other arguments passed along to \code{predict}
 #' @name predict

@@ -3,11 +3,18 @@
 \docType{package}
 \name{ensr}
 \alias{ensr}
-\alias{ensr-package}
 \title{Elastic Net SearcheR}
 \usage{
-ensr(x, y, alphas = seq(0, 1, length = 10), nlambda = 100L,
-  standardize = TRUE, nfolds = 10L, foldid, ...)
+ensr(
+  x,
+  y,
+  alphas = seq(0, 1, length = 10),
+  nlambda = 100L,
+  standardize = TRUE,
+  nfolds = 10L,
+  foldid,
+  ...
+)
 }
 \arguments{
 \item{x}{\code{x} matrix as in \code{glmnet}.}
@@ -19,18 +26,18 @@ ensr(x, y, alphas = seq(0, 1, length = 10), nlambda = 100L,
 \item{nlambda}{The number of \code{lambda} values - default is 100.}
 
 \item{standardize}{Logical flag for x variable standardization, prior to
-    fitting the model sequence. The coefficients are always returned on
-    the original scale. Default is \code{standardize=TRUE}.
-  If variables are in the same units already, you might not wish to
-  standardize. See details below for y standardization with \code{family="gaussian"}.}
+fitting the model sequence. The coefficients are always returned on the
+original scale. Default is \code{standardize=TRUE}.  If variables are in the
+same units already, you might not wish to standardize. See details below for
+y standardization with \code{family="gaussian"}.}
 
-\item{nfolds}{number of folds - default is 10. Although \code{nfolds}
-    can be as large as the sample size (leave-one-out CV), it is not
-    recommended for large datasets. Smallest value allowable is \code{nfolds=3}}
+\item{nfolds}{number of folds - default is 10. Although \code{nfolds} can be
+as large as the sample size (leave-one-out CV), it is not recommended for
+large datasets. Smallest value allowable is \code{nfolds=3}}
 
 \item{foldid}{an optional vector of values between 1 and \code{nfold}
-    identifying what fold each observation is in. If supplied,
-    \code{nfold} can be missing.}
+identifying what fold each observation is in. If supplied, \code{nfold} can
+be missing.}
 
 \item{...}{Other arguments that can be passed to \code{glmnet}}
 }
