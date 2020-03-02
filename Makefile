@@ -41,10 +41,13 @@ $(DATATARGETS) : $(PKG_ROOT)/vignette-spinners/ensr-datasets.Rout
 $(PKG_ROOT)/vignette-spinners/ensr-datasets.Rout : $(PKG_ROOT)/vignette-spinners/ensr-datasets.R
 	R CMD BATCH --vanilla $< $@
 
-
-$(PKG_ROOT)/vignettes/%.Rmd : $(PKG_ROOT)/vignette-spinners/%.R
+$(PKG_ROOT)/vignette-spinners/%.Rmd : $(PKG_ROOT)/vignette-spinners/%.R
 	R --vanilla --quiet -e "knitr::spin(hair = '$<', knit = FALSE)"
-	mv $(basename $<).Rmd $@
+
+$(PKG_ROOT)/vignettes/%.html.asis : $(PKG_ROOT)/vignette-spinners/%.Rmd
+	R --vanilla --quiet -e "rmarkdown::render('$<')"
+	mv $(basename $<).html $(PKG_ROOT)/vignettes/
+	echo "%\VignetteIndexEntry{$(basename $<)}\n%\VignetteEngine{R.rsp::asis}\n" > $@
 
 $(PKG_NAME)_$(PKG_VERSION).tar.gz: .install_dev_deps.Rout .document.Rout $(TESTS)
 	R CMD build --md5 $(build-options) $(PKG_ROOT)

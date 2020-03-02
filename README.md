@@ -40,9 +40,8 @@ remotes::install_github("dewittpe/ensr", build_opts = c("--no-resave-data"))
 
 ### Clone and Install
 There are detailed instructions for cloning the repo in the `CONTRIBUTING.md`
-file.  Windows users need to read the details for cloning the repo so that
-symbolic links will be handled correctly.  After cloning use the makefile to
-build, check, and install the ensr package, e.g.,
+file.  After cloning use the makefile to build, check, and install the ensr
+package, e.g.,
 
     make install
 
